@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>星月塔罗 · 沉浸式78张抽牌</title>
+<style>
+:root{--night:#07050d;--purple:#1b102c;--gold:#e5c77e;--violet:#b990ef;--text:#f8f2ff;--muted:#c7bdd3}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--text);background:var(--night)}
+button,input{font:inherit}.app{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% -10%,#352054 0,#120b20 40%,#06040b 100%)}
+.app:before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.75) 0 1px,transparent 1.5px);background-size:87px 87px;opacity:.22}
+.screen{position:absolute;inset:0;display:grid;place-items:center;padding:24px;opacity:0;visibility:hidden;transform:scale(1.025);transition:opacity .65s ease,transform .65s ease,visibility .65s}
+.screen.active{opacity:1;visibility:visible;transform:scale(1)}
+.panel{width:min(1080px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid rgba(229,199,126,.22);border-radius:24px;background:rgba(24,15,40,.9);box-shadow:0 25px 80px rgba(0,0,0,.5);backdrop-filter:blur(14px)}
+.header{text-align:center;margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:.32em;color:var(--violet)}h1{font:700 clamp(42px,8vw,72px) Georgia,serif;letter-spacing:.14em;margin:9px 0;text-shadow:0 0 30px rgba(185,144,239,.4)}h2{margin:0 0 10px;color:#f1dca7}.sub{color:var(--muted);line-height:1.8}
+.spread-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.spread{position:relative;min-height:126px;padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:16px;color:var(--text);background:rgba(255,255,255,.045);text-align:left;cursor:pointer;transition:.22s}.spread:hover{transform:translateY(-3px);border-color:rgba(229,199,126,.55)}.spread.active{border-color:var(--gold);box-shadow:0 0 0 3px rgba(229,199,126,.08);background:linear-gradient(145deg,rgba(229,199,126,.15),rgba(185,144,239,.13))}.spread strong{display:block;margin-bottom:7px}.spread small{color:var(--muted);line-height:1.55}.badge{position:absolute;right:11px;top:11px;padding:4px 8px;border-radius:99px;background:var(--gold);color:#25172c;font-size:12px;font-weight:800}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{padding:12px 22px;border-radius:99px;border:1px solid transparent;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.primary{color:#24172d;font-weight:800;background:linear-gradient(135deg,#f1dda4,#cca6ee)}.secondary{color:#f1dda4;border-color:rgba(229,199,126,.45);background:rgba(229,199,126,.08)}.ghost{color:var(--muted);border-color:rgba(255,255,255,.16);background:transparent}
+.question-card{width:min(680px,100%)}.selected-summary{padding:16px;border:1px solid rgba(229,199,126,.22);border-radius:14px;background:rgba(255,255,255,.04);margin:18px 0}input{width:100%;padding:14px 16px;border-radius:13px;border:1px solid rgba(255,255,255,.16);outline:none;color:white;background:rgba(0,0,0,.25);margin-top:10px}input:focus{border-color:var(--violet)}.option-row{display:none;grid-template-columns:1fr 1fr;gap:10px}.option-row.show{display:grid}
+.table-screen{padding:0}.table-shell{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at top,#25143d,#08060f 70%)}.table-top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:rgba(8,5,14,.7);border-bottom:1px solid rgba(229,199,126,.16);z-index:10}.table-title{font-family:Georgia,serif;letter-spacing:.12em}.table-controls{display:flex;gap:8px;flex-wrap:wrap}
+.tarot-table{position:relative;overflow:hidden;margin:12px;border:2px solid rgba(229,199,126,.6);border-radius:28px;box-shadow:inset 0 0 80px rgba(0,0,0,.65),0 25px 70px rgba(0,0,0,.42);background:
+radial-gradient(circle at center,transparent 0 12%,rgba(221,192,119,.12) 12.4% 12.8%,transparent 13.2% 25%,rgba(221,192,119,.09) 25.4% 25.8%,transparent 26.2%),
+conic-gradient(from 0deg at 50% 50%,rgba(229,199,126,.06),transparent 12%,rgba(229,199,126,.06) 25%,transparent 38%,rgba(229,199,126,.06) 50%,transparent 62%,rgba(229,199,126,.06) 75%,transparent 88%,rgba(229,199,126,.06)),
+linear-gradient(135deg,#35154c,#160c2c 55%,#090713)}
+.tarot-table:before{content:"☾  ✦  ☉  ✦  ☽";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:58px Georgia,serif;letter-spacing:.22em;color:rgba(229,199,126,.12);white-space:nowrap}.tarot-table:after{content:"";position:absolute;inset:22px;border:1px solid rgba(229,199,126,.22);border-radius:22px;pointer-events:none}
+.card-back{position:absolute;width:64px;aspect-ratio:2/3;border-radius:7px;border:2px solid #d7bd76;background:radial-gradient(circle,#5d347d 0 16%,#241137 17% 52%,#10091c 53%);box-shadow:0 9px 15px rgba(0,0,0,.43);display:grid;place-items:center;color:#ead38d;cursor:pointer;user-select:none;will-change:transform,left,top;transition:filter .22s,opacity .3s}.card-back:before{content:"✦";width:38px;height:58px;border:1px solid rgba(234,211,141,.62);border-radius:20px;display:grid;place-items:center}.card-back:hover{filter:brightness(1.25) drop-shadow(0 0 9px rgba(229,199,126,.5));z-index:999!important}.card-back.chosen{pointer-events:none}
+.statusbar{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:11px 18px;background:rgba(8,5,14,.78);border-top:1px solid rgba(229,199,126,.16)}.status{color:#ddd2e8;line-height:1.5}.chosen-strip{display:flex;gap:7px}.mini{width:32px;aspect-ratio:2/3;border:1px solid var(--gold);border-radius:4px;background:#241137;box-shadow:0 4px 8px rgba(0,0,0,.3)}
+.spread-board{width:min(1180px,100%);height:min(92vh,820px);display:grid;grid-template-rows:auto 1fr auto;padding:18px;border:1px solid rgba(229,199,126,.24);border-radius:24px;background:rgba(22,14,37,.94)}.spread-header{text-align:center}.slots{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:18px;overflow:auto;padding:14px}.slot{width:145px;text-align:center}.position{min-height:38px;color:var(--gold);font-size:13px;line-height:1.4}.picked{width:130px;aspect-ratio:2/3;margin:auto;perspective:1000px;cursor:pointer}.inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.7,.2,1)}.picked.revealed .inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;overflow:hidden;border:3px solid #d6b86c;border-radius:10px;backface-visibility:hidden;box-shadow:0 15px 28px rgba(0,0,0,.45)}.front{transform:rotateY(180deg);background:#eadfc1}.front img{width:100%;height:100%;display:block;object-fit:cover}.picked.reversed .front img{transform:rotate(180deg)}.meta{min-height:42px;margin-top:7px;color:var(--muted);font-size:13px}.meta strong{display:block;color:white}.reading{display:none;position:absolute;inset:4%;z-index:30;padding:24px;overflow:auto;border:1px solid rgba(229,199,126,.28);border-radius:22px;background:rgba(13,8,23,.97);box-shadow:0 25px 90px #000}.reading.show{display:block}.reading article{padding:16px 0;border-top:1px solid rgba(255,255,255,.1)}.reading article:first-of-type{border-top:0}.reading h3{color:#efd99c}.reading p{line-height:1.9;color:#d9d0e0}.summary{padding:18px;border:1px solid rgba(185,144,239,.25);border-radius:14px;background:rgba(185,144,239,.07)}
+.loading{position:fixed;left:18px;bottom:18px;z-index:99;padding:9px 13px;border-radius:99px;background:rgba(0,0,0,.65);color:var(--muted);font-size:12px}.hidden{display:none!important}
+@media(max-width:850px){.spread-grid{grid-template-columns:repeat(2,1fr)}.card-back{width:54px}.table-top{align-items:flex-start}.table-controls{justify-content:flex-end}.slot{width:126px}.picked{width:112px}}
+@media(max-width:560px){.screen{padding:12px}.panel{padding:18px;max-height:calc(100vh - 24px)}.spread-grid{grid-template-columns:1fr}.option-row{grid-template-columns:1fr}.table-top{padding:9px;display:block}.table-title{text-align:center;margin-bottom:7px}.table-controls{justify-content:center}.tarot-table{margin:7px}.statusbar{grid-template-columns:1fr}.chosen-strip{justify-content:center}.card-back{width:47px}.slot{width:108px}.picked{width:96px}.spread-board{height:96vh;padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<section id="spreadScreen" class="screen active">
+  <div class="panel">
+    <div class="header"><div class="eyebrow">RIDER–WAITE–SMITH TAROT</div><h1>星月塔罗</h1><div class="sub">选择牌阵。确认后页面会过渡到问题页，再进入沉浸式塔罗牌桌。</div></div>
+    <div id="spreadGrid" class="spread-grid"></div>
+    <div class="actions"><button id="toQuestion" class="btn primary">确认牌阵</button></div>
+  </div>
+</section>
+
+<section id="questionScreen" class="screen">
+  <div class="panel question-card">
+    <h2>填写你的问题</h2>
+    <div id="chosenSpread" class="selected-summary"></div>
+    <input id="questionInput" maxlength="160" placeholder="例如：我未来三个月的工作发展如何？（可以留空）">
+    <div id="optionRow" class="option-row"><input id="optionA" placeholder="选项 A"><input id="optionB" placeholder="选项 B"></div>
+    <div class="actions"><button id="backSpread" class="btn ghost">返回选择</button><button id="toTable" class="btn primary">进入牌桌</button></div>
+  </div>
+</section>
+
+<section id="tableScreen" class="screen table-screen">
+  <div class="table-shell">
+    <div class="table-top">
+      <div class="table-title">✦ 星月塔罗牌桌 ✦</div>
+      <div class="table-controls"><button id="backQuestion" class="btn ghost">返回</button><button id="shuffleBtn" class="btn secondary">洗牌</button><button id="undoBtn" class="btn ghost">撤回</button><button id="finishPick" class="btn primary" disabled>完成选牌</button></div>
+    </div>
+    <div id="tarotTable" class="tarot-table"></div>
+    <div class="statusbar"><div id="tableStatus" class="status"></div><div id="chosenStrip" class="chosen-strip"></div></div>
+  </div>
+</section>
+
+<section id="revealScreen" class="screen">
+  <div class="spread-board">
+    <div class="spread-header"><h2 id="revealTitle"></h2><div id="revealStatus" class="sub"></div></div>
+    <div id="slots" class="slots"></div>
+    <div class="actions"><button id="backTable" class="btn ghost">重新选牌</button><button id="startReveal" class="btn primary">开始翻牌</button><button id="interpretBtn" class="btn secondary hidden">辅助解读</button><button id="skipBtn" class="btn ghost hidden">暂不解读</button></div>
+  </div>
+  <div id="reading" class="reading"><button id="closeReading" class="btn ghost" style="float:right">关闭</button><h2>辅助解读</h2><div id="readingList"></div><div class="summary"><h3>结合你的问题</h3><p id="summaryText"></p></div></div>
+</section>
+<div id="loading" class="loading">正在预加载牌面…</div>
+</div>
+
+<script>
+const IMAGE_BASE="https://raw.githubusercontent.com/searge/tarot/master/assets/img/big/";
+const cards=[{"id": "m00", "name": "愚者", "english": "The Fool", "image": "maj00.jpg", "upright": "新的开始、自由、冒险与信任。你正面对一条尚未被定义的道路，适合保持开放并勇敢尝试。", "reversed": "冲动、准备不足或因害怕未知而停步。先检查风险与现实条件，再决定是否迈出下一步。"}, {"id": "m01", "name": "魔术师", "english": "The Magician", "image": "maj01.jpg", "upright": "能力、资源、意志与行动正在汇聚。你已经拥有推进目标的工具，关键在于专注和落实。", "reversed": "才能被分散、承诺大于行动，或存在操控与信息包装。重新确认动机并用结果验证能力。"}, {"id": "m02", "name": "女祭司", "english": "The High Priestess", "image": "maj02.jpg", "upright": "直觉、潜意识、秘密与内在智慧。答案未必在外界，安静观察会让隐藏信息逐渐显现。", "reversed": "忽略直觉、信息不透明或情绪干扰判断。不要急于下结论，先核实事实并整理感受。"}, {"id": "m03", "name": "皇后", "english": "The Empress", "image": "maj03.jpg", "upright": "滋养、创造、丰盛与成长。关系或计划需要被温柔照料，也提醒你关注身体与生活品质。", "reversed": "过度付出、依赖、创造力停滞或忽略自己。建立边界，把资源重新分配给真正重要的部分。"}, {"id": "m04", "name": "皇帝", "english": "The Emperor", "image": "maj04.jpg", "upright": "秩序、责任、规则与稳定基础。清楚的边界和可执行计划能够让事情变得可靠。", "reversed": "控制欲、固执、权威冲突或结构僵化。保持原则，同时允许沟通和调整。"}, {"id": "m05", "name": "教皇", "english": "The Hierophant", "image": "maj05.jpg", "upright": "传统、学习、制度与专业指导。成熟经验、共同价值或可信导师能提供帮助。", "reversed": "旧规则不再适用、观念冲突或盲从权威。理解规则背后的目的，再决定遵守或突破。"}, {"id": "m06", "name": "恋人", "english": "The Lovers", "image": "maj06.jpg", "upright": "连接、选择、吸引与价值一致。重要决定需要忠于真实需求，并通过坦诚沟通建立共识。", "reversed": "关系失衡、沟通障碍、价值冲突或逃避选择。不要以取悦别人代替诚实。"}, {"id": "m07", "name": "战车", "english": "The Chariot", "image": "maj07.jpg", "upright": "方向、意志力、竞争与推进。只要目标清楚并保持自律，你有能力穿越阻力。", "reversed": "急躁、失控、方向分裂或只顾速度。先统一目标，再调整行动节奏。"}, {"id": "m08", "name": "力量", "english": "Strength", "image": "maj08.jpg", "upright": "勇气、耐心、同理心与温柔的自控力。真正的强大来自稳定，而非压制。", "reversed": "自我怀疑、疲惫、情绪失控或过度逞强。先恢复能量，再处理困难。"}, {"id": "m09", "name": "隐者", "english": "The Hermit", "image": "maj09.jpg", "upright": "独处、反思、寻找答案与内在成长。暂时离开噪音，能够看清真正重要的方向。", "reversed": "孤立、封闭、逃避现实或过度沉思。保留独立空间，也要接受可信任的支持。"}, {"id": "m10", "name": "命运之轮", "english": "Wheel of Fortune", "image": "maj10.jpg", "upright": "周期、转机、机会与不可控变化。局势正在移动，保持弹性更容易把握新可能。", "reversed": "延迟、反复、阻力或抗拒变化。观察重复出现的模式，并调整自己的应对方式。"}, {"id": "m11", "name": "正义", "english": "Justice", "image": "maj11.jpg", "upright": "事实、公平、责任与因果。需要依据完整信息作出理性判断，并承担结果。", "reversed": "偏见、不公平、逃避责任或信息不完整。补足事实，明确表达立场。"}, {"id": "m12", "name": "倒吊人", "english": "The Hanged Man", "image": "maj12.jpg", "upright": "暂停、换角度、放下执念与必要等待。新的视角比强行推进更重要。", "reversed": "拖延、无效等待、僵持或抗拒改变。分辨耐心与停滞，必要时主动打破局面。"}, {"id": "m13", "name": "死神", "english": "Death", "image": "maj13.jpg", "upright": "结束、转化、告别旧阶段与重生。某种状态需要结束，才能为新阶段腾出空间。", "reversed": "抗拒结束、无法放下或反复旧模式。接受变化并逐步减少对旧状态的依赖。"}, {"id": "m14", "name": "节制", "english": "Temperance", "image": "maj14.jpg", "upright": "平衡、协调、疗愈与融合。循序渐进、适度调整比极端行动更有效。", "reversed": "失衡、急躁、过度消耗或不同需求难以协调。重新安排节奏和边界。"}, {"id": "m15", "name": "恶魔", "english": "The Devil", "image": "maj15.jpg", "upright": "欲望、依赖、束缚与阴影。看清让你失去自由的习惯或关系，是改变的第一步。", "reversed": "觉醒、摆脱束缚、恢复选择权。继续保持清醒，避免重新回到旧模式。"}, {"id": "m16", "name": "高塔", "english": "The Tower", "image": "maj16.jpg", "upright": "突变、真相显现、旧结构瓦解。虽然过程不安，但它会暴露不可靠的基础。", "reversed": "压抑问题、害怕改变或危机被延后。主动处理隐患比被动爆发更可控。"}, {"id": "m17", "name": "星星", "english": "The Star", "image": "maj17.jpg", "upright": "希望、疗愈、灵感与重新相信。困难之后，长期方向和内在信心开始恢复。", "reversed": "失望、理想受挫或看不到希望。不要强迫自己立刻振作，从一个小目标开始。"}, {"id": "m18", "name": "月亮", "english": "The Moon", "image": "maj18.jpg", "upright": "迷雾、潜意识、想象与情绪波动。信息尚不清晰，需要谨慎判断。", "reversed": "真相逐渐浮现、恐惧减弱或迷雾散去。继续核实，不要过早放松警惕。"}, {"id": "m19", "name": "太阳", "english": "The Sun", "image": "maj19.jpg", "upright": "清晰、喜悦、成功与生命力。事情有机会更顺畅，也适合公开表达和享受成果。", "reversed": "结果延迟、过度乐观或忽略细节。保持信心，同时认真处理现实问题。"}, {"id": "m20", "name": "审判", "english": "Judgement", "image": "maj20.jpg", "upright": "觉醒、回顾、重要决定与重新出发。过去经验正在帮助你作出更成熟的选择。", "reversed": "自责、害怕评价、逃避决定或沉溺过去。接受不完美，把注意力放回当下。"}, {"id": "m21", "name": "世界", "english": "The World", "image": "maj21.jpg", "upright": "完成、整合、成果与进入新阶段。一个周期接近圆满，适合收尾并认可成长。", "reversed": "尚未完成、缺少收尾或停在最后一步。处理剩余细节，不要提前松懈。"}, {"id": "wands01", "name": "权杖一", "english": "Ace of Wands", "image": "wands01.jpg", "upright": "权杖一强调新的机会、纯粹潜力与起点。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖一逆位常见于机会尚未落地、开端受阻或能量没有被使用。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands02", "name": "权杖二", "english": "Two of Wands", "image": "wands02.jpg", "upright": "权杖二强调选择、平衡、计划与双方互动。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖二逆位常见于犹豫、失衡、信息不足或合作困难。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands03", "name": "权杖三", "english": "Three of Wands", "image": "wands03.jpg", "upright": "权杖三强调扩展、合作、成长与初步成果。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖三逆位常见于沟通不足、进展延误或团队关系失衡。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands04", "name": "权杖四", "english": "Four of Wands", "image": "wands04.jpg", "upright": "权杖四强调稳定、守成、安全感与建立结构。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖四逆位常见于僵化、停滞、过度防守或害怕改变。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands05", "name": "权杖五", "english": "Five of Wands", "image": "wands05.jpg", "upright": "权杖五强调挑战、冲突、损失感与必要调整。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖五逆位常见于冲突延续、难以释怀或错过修复机会。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands06", "name": "权杖六", "english": "Six of Wands", "image": "wands06.jpg", "upright": "权杖六强调改善、过渡、支持、分享与阶段成果。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖六逆位常见于进展延迟、旧问题反复或付出回报失衡。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands07", "name": "权杖七", "english": "Seven of Wands", "image": "wands07.jpg", "upright": "权杖七强调评估、策略、选择与坚持立场。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖七逆位常见于怀疑、分心、策略失效或防御过度。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands08", "name": "权杖八", "english": "Eight of Wands", "image": "wands08.jpg", "upright": "权杖八强调行动加速、技能、专注与持续投入。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖八逆位常见于拖延、重复劳动、效率低下或方向错误。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands09", "name": "权杖九", "english": "Nine of Wands", "image": "wands09.jpg", "upright": "权杖九强调接近完成、韧性、独立成果与经验积累。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖九逆位常见于疲惫、焦虑、过度防备或难以享受成果。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands10", "name": "权杖十", "english": "Ten of Wands", "image": "wands10.jpg", "upright": "权杖十强调周期顶点、完成、责任与累积结果。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖十逆位常见于负担过重、结束延迟或结构需要重新整理。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands11", "name": "权杖侍从", "english": "Page of Wands", "image": "wands11.jpg", "upright": "权杖侍从强调消息、学习、好奇心与新经验。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖侍从逆位常见于不成熟、信息误差、拖延或缺乏实践。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands12", "name": "权杖骑士", "english": "Knight of Wands", "image": "wands12.jpg", "upright": "权杖骑士强调推进、追求、冒险与执行。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖骑士逆位常见于急躁、行动极端、承诺不足或方向失控。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands13", "name": "权杖王后", "english": "Queen of Wands", "image": "wands13.jpg", "upright": "权杖王后强调成熟感受、滋养、洞察与稳定影响力。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖王后逆位常见于情绪化、过度付出、依赖或内在不安。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "wands14", "name": "权杖国王", "english": "King of Wands", "image": "wands14.jpg", "upright": "权杖国王强调掌控、责任、成熟判断与外在成就。在权杖所代表的领域中，它通常涉及行动、事业、创造力、热情和个人意志。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "权杖国王逆位常见于控制欲、固执、权威失衡或缺少同理心。在权杖所代表的领域中，也可能表现为冲动、精力分散、行动受阻或方向不稳。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups01", "name": "圣杯一", "english": "Ace of Cups", "image": "cups01.jpg", "upright": "圣杯一强调新的机会、纯粹潜力与起点。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯一逆位常见于机会尚未落地、开端受阻或能量没有被使用。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups02", "name": "圣杯二", "english": "Two of Cups", "image": "cups02.jpg", "upright": "圣杯二强调选择、平衡、计划与双方互动。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯二逆位常见于犹豫、失衡、信息不足或合作困难。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups03", "name": "圣杯三", "english": "Three of Cups", "image": "cups03.jpg", "upright": "圣杯三强调扩展、合作、成长与初步成果。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯三逆位常见于沟通不足、进展延误或团队关系失衡。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups04", "name": "圣杯四", "english": "Four of Cups", "image": "cups04.jpg", "upright": "圣杯四强调稳定、守成、安全感与建立结构。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯四逆位常见于僵化、停滞、过度防守或害怕改变。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups05", "name": "圣杯五", "english": "Five of Cups", "image": "cups05.jpg", "upright": "圣杯五强调挑战、冲突、损失感与必要调整。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯五逆位常见于冲突延续、难以释怀或错过修复机会。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups06", "name": "圣杯六", "english": "Six of Cups", "image": "cups06.jpg", "upright": "圣杯六强调改善、过渡、支持、分享与阶段成果。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯六逆位常见于进展延迟、旧问题反复或付出回报失衡。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups07", "name": "圣杯七", "english": "Seven of Cups", "image": "cups07.jpg", "upright": "圣杯七强调评估、策略、选择与坚持立场。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯七逆位常见于怀疑、分心、策略失效或防御过度。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups08", "name": "圣杯八", "english": "Eight of Cups", "image": "cups08.jpg", "upright": "圣杯八强调行动加速、技能、专注与持续投入。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯八逆位常见于拖延、重复劳动、效率低下或方向错误。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups09", "name": "圣杯九", "english": "Nine of Cups", "image": "cups09.jpg", "upright": "圣杯九强调接近完成、韧性、独立成果与经验积累。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯九逆位常见于疲惫、焦虑、过度防备或难以享受成果。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups10", "name": "圣杯十", "english": "Ten of Cups", "image": "cups10.jpg", "upright": "圣杯十强调周期顶点、完成、责任与累积结果。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯十逆位常见于负担过重、结束延迟或结构需要重新整理。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups11", "name": "圣杯侍从", "english": "Page of Cups", "image": "cups11.jpg", "upright": "圣杯侍从强调消息、学习、好奇心与新经验。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯侍从逆位常见于不成熟、信息误差、拖延或缺乏实践。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups12", "name": "圣杯骑士", "english": "Knight of Cups", "image": "cups12.jpg", "upright": "圣杯骑士强调推进、追求、冒险与执行。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯骑士逆位常见于急躁、行动极端、承诺不足或方向失控。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups13", "name": "圣杯王后", "english": "Queen of Cups", "image": "cups13.jpg", "upright": "圣杯王后强调成熟感受、滋养、洞察与稳定影响力。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯王后逆位常见于情绪化、过度付出、依赖或内在不安。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "cups14", "name": "圣杯国王", "english": "King of Cups", "image": "cups14.jpg", "upright": "圣杯国王强调掌控、责任、成熟判断与外在成就。在圣杯所代表的领域中，它通常涉及情感、关系、直觉、想象和内在满足。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "圣杯国王逆位常见于控制欲、固执、权威失衡或缺少同理心。在圣杯所代表的领域中，也可能表现为情绪失衡、依赖、逃避或关系沟通困难。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords01", "name": "宝剑一", "english": "Ace of Swords", "image": "swords01.jpg", "upright": "宝剑一强调新的机会、纯粹潜力与起点。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑一逆位常见于机会尚未落地、开端受阻或能量没有被使用。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords02", "name": "宝剑二", "english": "Two of Swords", "image": "swords02.jpg", "upright": "宝剑二强调选择、平衡、计划与双方互动。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑二逆位常见于犹豫、失衡、信息不足或合作困难。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords03", "name": "宝剑三", "english": "Three of Swords", "image": "swords03.jpg", "upright": "宝剑三强调扩展、合作、成长与初步成果。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑三逆位常见于沟通不足、进展延误或团队关系失衡。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords04", "name": "宝剑四", "english": "Four of Swords", "image": "swords04.jpg", "upright": "宝剑四强调稳定、守成、安全感与建立结构。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑四逆位常见于僵化、停滞、过度防守或害怕改变。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords05", "name": "宝剑五", "english": "Five of Swords", "image": "swords05.jpg", "upright": "宝剑五强调挑战、冲突、损失感与必要调整。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑五逆位常见于冲突延续、难以释怀或错过修复机会。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords06", "name": "宝剑六", "english": "Six of Swords", "image": "swords06.jpg", "upright": "宝剑六强调改善、过渡、支持、分享与阶段成果。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑六逆位常见于进展延迟、旧问题反复或付出回报失衡。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords07", "name": "宝剑七", "english": "Seven of Swords", "image": "swords07.jpg", "upright": "宝剑七强调评估、策略、选择与坚持立场。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑七逆位常见于怀疑、分心、策略失效或防御过度。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords08", "name": "宝剑八", "english": "Eight of Swords", "image": "swords08.jpg", "upright": "宝剑八强调行动加速、技能、专注与持续投入。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑八逆位常见于拖延、重复劳动、效率低下或方向错误。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords09", "name": "宝剑九", "english": "Nine of Swords", "image": "swords09.jpg", "upright": "宝剑九强调接近完成、韧性、独立成果与经验积累。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑九逆位常见于疲惫、焦虑、过度防备或难以享受成果。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords10", "name": "宝剑十", "english": "Ten of Swords", "image": "swords10.jpg", "upright": "宝剑十强调周期顶点、完成、责任与累积结果。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑十逆位常见于负担过重、结束延迟或结构需要重新整理。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords11", "name": "宝剑侍从", "english": "Page of Swords", "image": "swords11.jpg", "upright": "宝剑侍从强调消息、学习、好奇心与新经验。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑侍从逆位常见于不成熟、信息误差、拖延或缺乏实践。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords12", "name": "宝剑骑士", "english": "Knight of Swords", "image": "swords12.jpg", "upright": "宝剑骑士强调推进、追求、冒险与执行。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑骑士逆位常见于急躁、行动极端、承诺不足或方向失控。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords13", "name": "宝剑王后", "english": "Queen of Swords", "image": "swords13.jpg", "upright": "宝剑王后强调成熟感受、滋养、洞察与稳定影响力。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑王后逆位常见于情绪化、过度付出、依赖或内在不安。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "swords14", "name": "宝剑国王", "english": "King of Swords", "image": "swords14.jpg", "upright": "宝剑国王强调掌控、责任、成熟判断与外在成就。在宝剑所代表的领域中，它通常涉及思考、沟通、真相、冲突和重要决定。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "宝剑国王逆位常见于控制欲、固执、权威失衡或缺少同理心。在宝剑所代表的领域中，也可能表现为焦虑、误解、内耗、言语伤害或判断失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents01", "name": "星币一", "english": "Ace of Pentacles", "image": "pents01.jpg", "upright": "星币一强调新的机会、纯粹潜力与起点。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币一逆位常见于机会尚未落地、开端受阻或能量没有被使用。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents02", "name": "星币二", "english": "Two of Pentacles", "image": "pents02.jpg", "upright": "星币二强调选择、平衡、计划与双方互动。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币二逆位常见于犹豫、失衡、信息不足或合作困难。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents03", "name": "星币三", "english": "Three of Pentacles", "image": "pents03.jpg", "upright": "星币三强调扩展、合作、成长与初步成果。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币三逆位常见于沟通不足、进展延误或团队关系失衡。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents04", "name": "星币四", "english": "Four of Pentacles", "image": "pents04.jpg", "upright": "星币四强调稳定、守成、安全感与建立结构。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币四逆位常见于僵化、停滞、过度防守或害怕改变。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents05", "name": "星币五", "english": "Five of Pentacles", "image": "pents05.jpg", "upright": "星币五强调挑战、冲突、损失感与必要调整。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币五逆位常见于冲突延续、难以释怀或错过修复机会。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents06", "name": "星币六", "english": "Six of Pentacles", "image": "pents06.jpg", "upright": "星币六强调改善、过渡、支持、分享与阶段成果。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币六逆位常见于进展延迟、旧问题反复或付出回报失衡。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents07", "name": "星币七", "english": "Seven of Pentacles", "image": "pents07.jpg", "upright": "星币七强调评估、策略、选择与坚持立场。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币七逆位常见于怀疑、分心、策略失效或防御过度。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents08", "name": "星币八", "english": "Eight of Pentacles", "image": "pents08.jpg", "upright": "星币八强调行动加速、技能、专注与持续投入。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币八逆位常见于拖延、重复劳动、效率低下或方向错误。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents09", "name": "星币九", "english": "Nine of Pentacles", "image": "pents09.jpg", "upright": "星币九强调接近完成、韧性、独立成果与经验积累。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币九逆位常见于疲惫、焦虑、过度防备或难以享受成果。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents10", "name": "星币十", "english": "Ten of Pentacles", "image": "pents10.jpg", "upright": "星币十强调周期顶点、完成、责任与累积结果。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币十逆位常见于负担过重、结束延迟或结构需要重新整理。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents11", "name": "星币侍从", "english": "Page of Pentacles", "image": "pents11.jpg", "upright": "星币侍从强调消息、学习、好奇心与新经验。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币侍从逆位常见于不成熟、信息误差、拖延或缺乏实践。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents12", "name": "星币骑士", "english": "Knight of Pentacles", "image": "pents12.jpg", "upright": "星币骑士强调推进、追求、冒险与执行。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币骑士逆位常见于急躁、行动极端、承诺不足或方向失控。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents13", "name": "星币王后", "english": "Queen of Pentacles", "image": "pents13.jpg", "upright": "星币王后强调成熟感受、滋养、洞察与稳定影响力。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币王后逆位常见于情绪化、过度付出、依赖或内在不安。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}, {"id": "pents14", "name": "星币国王", "english": "King of Pentacles", "image": "pents14.jpg", "upright": "星币国王强调掌控、责任、成熟判断与外在成就。在星币所代表的领域中，它通常涉及工作、金钱、身体、现实基础和长期积累。这张牌建议把抽象感受转化为清楚、可持续的行动。", "reversed": "星币国王逆位常见于控制欲、固执、权威失衡或缺少同理心。在星币所代表的领域中，也可能表现为现实压力、资源不稳、拖延或价值感失衡。此时适合先修正节奏与认知，再继续推进。"}];
+const spreads=[{"id": "free3", "name": "无牌阵", "desc": "自由抽取三张牌，不设置固定问题位置。", "positions": ["第一张", "第二张", "第三张"]}, {"id": "monthly", "name": "月运势", "desc": "月初、月中、月末与整体发展建议。", "positions": ["月初状态", "月中发展", "月末趋势", "整体发展建议"]}, {"id": "careerPyramid", "name": "事业金字塔", "desc": "现状、建议、阻碍和未来发展。", "positions": ["现状", "建议／解决方法", "阻碍", "未来发展"]}, {"id": "lovePyramid", "name": "爱情金字塔", "desc": "双方想法、关系现状和未来发展。", "positions": ["我的想法", "对方的想法", "关系现状", "未来发展"]}, {"id": "choice", "name": "二选一牌阵", "desc": "比较 A、B 两种选择的发展与结果。", "positions": ["现状", "A 的未来发展", "A 的结果", "B 的未来发展", "B 的结果"], "needsOptions": true}, {"id": "loverCross", "name": "恋人十字", "desc": "双方想法、过去、现状与未来。", "positions": ["你的想法状态", "对方的想法状态", "过去", "关系现状", "未来发展"]}, {"id": "career6", "name": "事业牌阵", "desc": "工作适配度、空间、人际、领导与机会。", "positions": ["这份工作适合你吗", "发展空间", "人际关系", "领导对你的想法", "注意事项", "其他工作机会"]}, {"id": "venus", "name": "爱情维纳斯", "desc": "观察双方真实想法、关系影响、阻碍与结果。", "positions": ["你的真实想法", "对方的真实想法", "关系对你的影响", "关系对对方的影响", "感情阻碍", "感情最终结果走向", "你未来的心态", "对方未来的心态"]}, {"id": "inspiration", "name": "灵感对应", "desc": "多角度比较双方真实想法，并看建议和未来。", "positions": ["你的真实想法①", "对方的真实想法②", "你的真实想法③", "对方的真实想法④", "你的真实想法⑤", "对方的真实想法⑥", "未来发展", "建议"]}];
+const $=id=>document.getElementById(id);
+const screens=["spreadScreen","questionScreen","tableScreen","revealScreen"];
+let selectedSpread=spreads[0],deck=[],picked=[],busy=false,revealIndex=0,revealMode=false;
+
+function showScreen(id){screens.forEach(x=>$(x).classList.toggle("active",x===id))}
+function renderSpreads(){
+  $("spreadGrid").innerHTML="";
+  spreads.forEach(s=>{
+    const b=document.createElement("button"); b.className="spread"+(s.id===selectedSpread.id?" active":"");
+    b.innerHTML=`<span class="badge">${s.positions.length}张</span><strong>${s.name}</strong><small>${s.desc}</small>`;
+    b.onclick=()=>{selectedSpread=s;renderSpreads()}; $("spreadGrid").appendChild(b);
+  });
+}
+function prepareQuestion(){
+  $("chosenSpread").innerHTML=`<strong>${selectedSpread.name}</strong><br><span class="sub">${selectedSpread.desc}<br>需要抽取 ${selectedSpread.positions.length} 张牌。</span>`;
+  $("optionRow").classList.toggle("show",!!selectedSpread.needsOptions); showScreen("questionScreen");
+}
+function shuffleArray(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function makeDeck(){
+  deck=shuffleArray(cards).map((c,i)=>({...c,reversed:Math.random()<.5,selected:false,
+    x:3+Math.random()*90,y:3+Math.random()*84,rot:-34+Math.random()*68,z:i}));
+}
+function enterTable(){
+  picked=[];revealIndex=0;revealMode=false;makeDeck();renderTable();updateTableStatus();showScreen("tableScreen");
+}
+function renderTable(){
+  const t=$("tarotTable");t.innerHTML="";
+  deck.forEach((c,i)=>{
+    const d=document.createElement("div");d.className="card-back"+(c.selected?" chosen":"");
+    d.style.left=c.x+"%";d.style.top=c.y+"%";d.style.transform=`rotate(${c.rot}deg)`;d.style.zIndex=c.z;
+    d.dataset.index=i;d.onclick=()=>chooseCard(i,d);t.appendChild(d);
+  });renderChosenStrip();
+}
+function updateTableStatus(){
+  const n=picked.length,total=selectedSpread.positions.length;
+  $("finishPick").disabled=n!==total||busy;
+  $("undoBtn").disabled=n===0||busy;
+  $("shuffleBtn").disabled=busy;
+  $("tableStatus").textContent=n<total?`请选择第 ${n+1} 张牌：${selectedSpread.positions[n]}（已选 ${n}/${total}）`:`已经选满 ${total} 张牌，可以点击“完成选牌”。`;
+}
+function renderChosenStrip(){
+  $("chosenStrip").innerHTML=picked.map(()=>'<span class="mini"></span>').join("");
+}
+function chooseCard(i,el){
+  if(busy||deck[i].selected||picked.length>=selectedSpread.positions.length)return;
+  deck[i].selected=true;
+  const rect=el.getBoundingClientRect(),target=$("chosenStrip").getBoundingClientRect();
+  const dx=(target.left+target.width/2)-(rect.left+rect.width/2),dy=(target.top+target.height/2)-(rect.top+rect.height/2);
+  el.animate([{transform:el.style.transform,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(0deg) scale(.45)`,opacity:.2}],{duration:650,easing:"cubic-bezier(.2,.75,.2,1)",fill:"forwards"});
+  setTimeout(()=>{el.style.opacity=0;picked.push({...deck[i],revealed:false});renderChosenStrip();updateTableStatus()},610);
+}
+async function animateShuffle(){
+  if(busy)return;busy=true;updateTableStatus();
+  picked=[];deck.forEach(c=>c.selected=false);renderChosenStrip();
+  const els=[...$("tarotTable").children]; const tableRect=$("tarotTable").getBoundingClientRect();
+  $("tableStatus").textContent="牌正在缓慢聚拢……";
+  await Promise.all(els.map((el,i)=>el.animate([
+    {left:el.style.left,top:el.style.top,transform:el.style.transform},
+    {left:"50%",top:"50%",transform:`translate(-50%,-50%) rotate(${(i%7)-3}deg)`}
+  ],{duration:900+i*7,easing:"cubic-bezier(.3,.7,.2,1)",fill:"forwards"}).finished));
+  $("tableStatus").textContent="牌组分开并交错洗牌……";
+  await Promise.all(els.map((el,i)=>{
+    const side=i%2?1:-1;
+    return el.animate([
+      {transform:`translate(-50%,-50%) rotate(${(i%7)-3}deg)`},
+      {transform:`translate(calc(-50% + ${side*90}px),-50%) rotate(${side*10}deg)`},
+      {transform:`translate(calc(-50% + ${side*25}px),calc(-50% + ${(i%13-6)*2}px)) rotate(${side*3}deg)`}
+    ],{duration:1150,delay:(i%14)*28,easing:"ease-in-out",fill:"forwards"}).finished
+  }));
+  $("tableStatus").textContent="牌组正在重新散开……";
+  makeDeck();
+  await Promise.all(els.map((el,i)=>{
+    const c=deck[i];
+    return el.animate([
+      {left:"50%",top:"50%",transform:"translate(-50%,-50%) rotate(0deg)",opacity:1},
+      {left:c.x+"%",top:c.y+"%",transform:`rotate(${c.rot}deg)`,opacity:1}
+    ],{duration:1000,delay:i*9,easing:"cubic-bezier(.2,.75,.2,1)",fill:"forwards"}).finished
+  }));
+  renderTable();busy=false;updateTableStatus();
+}
+function undoPick(){
+  if(busy||!picked.length)return;const last=picked.pop();const c=deck.find(x=>x.id===last.id);if(c)c.selected=false;renderTable();updateTableStatus();
+}
+function openReveal(){
+  if(picked.length!==selectedSpread.positions.length)return;
+  revealMode=false;revealIndex=0;$("revealTitle").textContent=selectedSpread.name;$("revealStatus").textContent="选牌完成。点击“开始翻牌”后，请按顺序逐张翻开。";
+  $("startReveal").classList.remove("hidden");$("interpretBtn").classList.add("hidden");$("skipBtn").classList.add("hidden");renderSlots();showScreen("revealScreen");
+}
+function renderSlots(){
+  $("slots").innerHTML="";
+  selectedSpread.positions.forEach((pos,i)=>{
+    const c=picked[i],wrap=document.createElement("div");wrap.className="slot";
+    wrap.innerHTML=`<div class="position">${i+1}. ${pos}</div>`;
+    const pc=document.createElement("div");pc.className="picked"+(c.revealed?" revealed":"")+(c.reversed?" reversed":"");
+    pc.innerHTML=`<div class="inner"><div class="face card-back" style="position:absolute;width:100%;height:100%;left:0;top:0"> </div><div class="face front"><img src="${IMAGE_BASE+c.image}" alt="${c.name}" onerror="this.onerror=null;this.src='https://commons.wikimedia.org/wiki/Special:Redirect/file/'+encodeURIComponent('${c.image}')"></div></div>`;
+    if(revealMode&&!c.revealed&&i===revealIndex)pc.onclick=()=>revealCard(i);
+    wrap.appendChild(pc);const meta=document.createElement("div");meta.className="meta";meta.innerHTML=c.revealed?`<strong>${c.name}</strong>${c.reversed?"逆位":"正位"}`:"等待翻牌";wrap.appendChild(meta);$("slots").appendChild(wrap);
+  });
+}
+function startReveal(){
+  revealMode=true;revealIndex=0;$("startReveal").classList.add("hidden");$("revealStatus").textContent=`请翻开第 1 张牌：${selectedSpread.positions[0]}`;renderSlots();
+}
+function revealCard(i){
+  if(!revealMode||i!==revealIndex)return;picked[i].revealed=true;revealIndex++;renderSlots();
+  if(revealIndex===picked.length){revealMode=false;$("revealStatus").textContent="所有牌已翻开。是否需要辅助解读？";$("interpretBtn").classList.remove("hidden");$("skipBtn").classList.remove("hidden")}
+  else $("revealStatus").textContent=`请翻开第 ${revealIndex+1} 张牌：${selectedSpread.positions[revealIndex]}`;
+}
+function buildReading(){
+  $("readingList").innerHTML=picked.map((c,i)=>`<article><h3>${selectedSpread.positions[i]}：${c.name} · ${c.reversed?"逆位":"正位"}</h3><p>${c.reversed?c.reversed:c.upright}</p></article>`).join("");
+  let text=`本次使用“${selectedSpread.name}”。`;const q=$("questionInput").value.trim();if(q)text+=`你的问题是：“${q}”。`;
+  if(selectedSpread.needsOptions)text+=`选项 A：“${$("optionA").value.trim()||"未填写"}”；选项 B：“${$("optionB").value.trim()||"未填写"}”。`;
+  text+=picked.map((c,i)=>`${selectedSpread.positions[i]}出现${c.name}${c.reversed?"逆位":"正位"}`).join("；")+"。";
+  text+="请把这些位置看作同一问题的不同侧面：现状说明当前基础，阻碍提示需要处理的部分，建议位置强调可执行行动，未来位置则是当前趋势延续后的可能方向，而不是无法改变的命运。";
+  $("summaryText").textContent=text;$("reading").classList.add("show");
+}
+function preload(){
+  let done=0;const total=cards.length;
+  cards.forEach(c=>{const im=new Image();im.onload=im.onerror=()=>{done++;$("loading").textContent=`正在预加载牌面 ${done}/${total}`;if(done===total)setTimeout(()=>$("loading").classList.add("hidden"),500)};im.src=IMAGE_BASE+c.image});
+}
+$("toQuestion").onclick=prepareQuestion;$("backSpread").onclick=()=>showScreen("spreadScreen");$("toTable").onclick=enterTable;$("backQuestion").onclick=()=>showScreen("questionScreen");
+$("shuffleBtn").onclick=animateShuffle;$("undoBtn").onclick=undoPick;$("finishPick").onclick=openReveal;$("backTable").onclick=()=>{picked=[];deck.forEach(c=>c.selected=false);renderTable();updateTableStatus();showScreen("tableScreen")};
+$("startReveal").onclick=startReveal;$("interpretBtn").onclick=buildReading;$("skipBtn").onclick=()=>{$("revealStatus").textContent="已选择暂不解读。你可以继续观察牌面。"};$("closeReading").onclick=()=>$("reading").classList.remove("show");
+renderSpreads();preload();
+</script>
+</body>
+</html>
