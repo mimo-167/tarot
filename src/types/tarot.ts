@@ -1,4 +1,8 @@
+import type { Locale } from "@/i18n/config";
+
 export type Orientation = "upright" | "reversed";
+
+export type SpreadCategory = "general" | "love" | "career" | "choice";
 
 export type TarotCard = {
   id: string;
@@ -21,11 +25,23 @@ export type TarotCard = {
 export type Spread = {
   id: string;
   name: string;
+  nameEn: string;
+  eyebrow: string;
+  eyebrowEn: string;
+  description: string;
+  descriptionEn: string;
+  positions: string[];
+  positionsEn: string[];
+  needsOptions?: boolean;
+  category: SpreadCategory;
+};
+
+export type LocalizedSpread = Pick<Spread, "id" | "needsOptions"> & {
+  name: string;
   eyebrow: string;
   description: string;
   positions: string[];
-  needsOptions?: boolean;
-  category: "通用" | "感情" | "事业" | "抉择";
+  category: string;
 };
 
 export type DrawnCard = TarotCard & {
@@ -34,10 +50,11 @@ export type DrawnCard = TarotCard & {
 };
 
 export type ReadingRequest = {
+  locale: Locale;
   question: string;
   context?: string;
   timeframe?: string;
-  spread: Pick<Spread, "id" | "name" | "description" | "positions">;
+  spread: Pick<LocalizedSpread, "id" | "name" | "description" | "positions">;
   options?: { a: string; b: string } | null;
   cards: Array<{
     id: string;

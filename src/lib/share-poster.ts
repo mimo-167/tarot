@@ -1,5 +1,45 @@
 import type { DrawnCard, Spread } from "@/types/tarot";
-import { orientationLabel } from "@/lib/game";
+import type { Locale } from "@/i18n/config";
+import { getCardCopy, orientationLabel } from "@/lib/game";
+import { localizeSpread } from "@/data/spreads";
+
+const posterCopy = {
+  "zh-CN": {
+    unsupported: "当前浏览器无法生成分享图",
+    brand: "星 月 塔 罗",
+    subtitle: (spread: string) => `${spread} · 一次属于你的静心观察`,
+    reflection: "牌面是一面镜子，答案仍在你的现实选择里。",
+    disclaimer: "星月塔罗 · 仅用于娱乐、自我观察与启发",
+    failed: "分享图生成失败",
+    fileName: (spread: string) => `星月塔罗-${spread}.png`,
+    shareTitle: "我的星月塔罗牌阵",
+    shareOpened: "已打开系统分享面板",
+    generated: "分享图已生成",
+  },
+  en: {
+    unsupported: "This browser cannot create a share image",
+    brand: "MOON & STARS TAROT",
+    subtitle: (spread: string) => `${spread} · A quiet moment of reflection`,
+    reflection: "The cards are a mirror; your choices in real life remain your own.",
+    disclaimer: "Moon & Stars Tarot · For entertainment and reflection only",
+    failed: "Could not create the share image",
+    fileName: (spread: string) => `moon-stars-tarot-${spread.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`,
+    shareTitle: "My Moon & Stars Tarot spread",
+    shareOpened: "The system share panel is open",
+    generated: "Share image created",
+  },
+} satisfies Record<Locale, {
+  unsupported: string;
+  brand: string;
+  subtitle: (spread: string) => string;
+  reflection: string;
+  disclaimer: string;
+  failed: string;
+  fileName: (spread: string) => string;
+  shareTitle: string;
+  shareOpened: string;
+  generated: string;
+}>;
 
 const loadImage = (source: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
@@ -14,12 +54,14 @@ const roundedRect = (context: CanvasRenderingContext2D, x: number, y: number, w:
   context.roundRect(x, y, w, h, r);
 };
 
-export async function createSharePoster(cards: DrawnCard[], spread: Spread) {
+export async function createSharePoster(cards: DrawnCard[], spread: Spread, locale: Locale = "zh-CN") {
+  const copy = posterCopy[locale];
+  const displaySpread = localizeSpread(spread, locale);
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1350;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("当前浏览器无法生成分享图");
+  if (!context) throw new Error(copy.unsupported);
 
   const gradient = context.createRadialGradient(540, 100, 10, 540, 700, 900);
   gradient.addColorStop(0, "#382151");
@@ -43,10 +85,10 @@ export async function createSharePoster(cards: DrawnCard[], spread: Spread) {
   context.fillText("RIDER · WAITE · SMITH", 540, 92);
   context.fillStyle = "#fff9ea";
   context.font = "700 72px serif";
-  context.fillText("星 月 塔 罗", 540, 178);
+  context.fillText(copy.brand, 540, 178);
   context.fillStyle = "#c9bdd5";
   context.font = "30px sans-serif";
-  context.fillText(`${spread.name} · 一次属于你的静心观察`, 540, 232);
+  context.fillText(copy.subtitle(displaySpread.name), 540, 232);
 
   const visibleCards = cards.slice(0, 8);
   const cardWidth = visibleCards.length > 5 ? 126 : 156;
@@ -60,6 +102,7 @@ export async function createSharePoster(cards: DrawnCard[], spread: Spread) {
 
   await Promise.all(
     visibleCards.map(async (card, index) => {
+      const displayCard = getCardCopy(card, locale);
       const row = Math.floor(index / columns);
       const column = index % columns;
       const rowCount = row === rows - 1 ? visibleCards.length - row * columns : columns;
@@ -84,32 +127,34 @@ export async function createSharePoster(cards: DrawnCard[], spread: Spread) {
       context.textAlign = "center";
       context.fillStyle = "#fff9ea";
       context.font = "600 25px sans-serif";
-      context.fillText(card.nameZh, x + cardWidth / 2, y + cardHeight + 42);
+      context.fillText(displayCard.name, x + cardWidth / 2, y + cardHeight + 42);
       context.fillStyle = "#bcaeca";
       context.font = "22px sans-serif";
-      context.fillText(`${spread.positions[index]} · ${orientationLabel(card.orientation)}`, x + cardWidth / 2, y + cardHeight + 76);
+      context.fillText(`${displaySpread.positions[index]} · ${orientationLabel(card.orientation, locale)}`, x + cardWidth / 2, y + cardHeight + 76);
     }),
   );
 
   context.textAlign = "center";
   context.fillStyle = "#d7ba76";
   context.font = "28px serif";
-  context.fillText("牌面是一面镜子，答案仍在你的现实选择里。", 540, 1268);
+  context.fillText(copy.reflection, 540, 1268);
   context.fillStyle = "#8f819f";
   context.font = "22px sans-serif";
-  context.fillText("星月塔罗 · 仅用于娱乐、自我观察与启发", 540, 1312);
+  context.fillText(copy.disclaimer, 540, 1312);
 
   return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("分享图生成失败"))), "image/png"),
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error(copy.failed))), "image/png"),
   );
 }
 
-export async function sharePoster(cards: DrawnCard[], spread: Spread) {
-  const blob = await createSharePoster(cards, spread);
-  const file = new File([blob], `星月塔罗-${spread.name}.png`, { type: "image/png" });
+export async function sharePoster(cards: DrawnCard[], spread: Spread, locale: Locale = "zh-CN") {
+  const copy = posterCopy[locale];
+  const displaySpread = localizeSpread(spread, locale);
+  const blob = await createSharePoster(cards, spread, locale);
+  const file = new File([blob], copy.fileName(displaySpread.name), { type: "image/png" });
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ title: "我的星月塔罗牌阵", files: [file] });
-    return "已打开系统分享面板";
+    await navigator.share({ title: copy.shareTitle, files: [file] });
+    return copy.shareOpened;
   }
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -117,5 +162,5 @@ export async function sharePoster(cards: DrawnCard[], spread: Spread) {
   link.download = file.name;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-  return "分享图已生成";
+  return copy.generated;
 }

@@ -1,5 +1,7 @@
 import { TarotExperience } from "@/components/TarotExperience";
+import { getRequestLocale } from "@/i18n/server";
 
-export default function Home() {
-  return <TarotExperience />;
+export default async function Home() {
+  const locale = await getRequestLocale();
+  return <TarotExperience initialLocale={locale} />;
 }

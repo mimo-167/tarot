@@ -2,7 +2,7 @@
 
 沉浸式 Rider–Waite–Smith 塔罗网页应用。项目由原始单文件 Demo 重构为 Next.js 16，并通过 OpenNext 部署到 Cloudflare Workers。
 
-线上地址：<https://xingyue-tarot.zhumo0110.workers.dev>
+线上地址：<https://tarot.zxkpg.uk>
 
 ## 已实现
 
@@ -15,13 +15,17 @@
 - Web Audio 环境氛围音和操作音效，偏好本地保存。
 - 前端每日 3 次友好额度 + Cloudflare Rate Limiting binding 每分钟防刷。
 - 桌面与移动端响应式、键盘焦点、状态播报和 `prefers-reduced-motion`。
+- 完整中英双语：浏览器语言自动识别、页面内即时切换、偏好 Cookie 持久化，以及双语牌阵、本地牌义、AI 解读、错误提示和分享海报。
 
 ## 技术结构
 
 - `src/components/TarotExperience.tsx`：完整仪式与运营功能界面。
 - `src/data/spreads.ts`：牌阵定义。
 - `src/data/tarot-cards.json`：从 RWS 知识库生成的 78 张牌数据。
+- `src/data/tarot-cards.en.json`：与 78 张中文牌逐一对应的英文牌义。
+- `src/i18n/`：双语界面文案、浏览器语言解析与服务端首屏语言选择。
 - `src/app/api/reading/route.ts`：Cloudflare Worker 中运行的 DeepSeek 接口。
+- `src/middleware.ts`：自定义域名 HTTP 请求跳转到 HTTPS。
 - `src/lib/reading-prompt.ts`：服务端系统提示词与本次牌面上下文。
 - `scripts/generate-tarot-data.mjs`：知识库到结构化数据的可重复生成脚本。
 - `wrangler.jsonc` / `open-next.config.ts`：Cloudflare Workers 部署配置。

@@ -1,0 +1,626 @@
+[
+  {
+    "id": "M00",
+    "upright": "New beginnings, freedom, curiosity, trust in the process, and a willingness to try. Its strength is openness and courage; its tradeoff is limited experience.",
+    "reversed": "At one extreme, recklessness, underestimated risks, or poor preparation; at the other, fear of the unknown that prevents a first step. Context shows whether the issue is too much daring or too little.",
+    "relationship": "Fresh energy and candid contact without forcing an outcome; the shadow is avoiding commitment or overlooking consequences.",
+    "career": "A new direction, a trial run, or learning across disciplines. Favor small-scale validation rather than treating optimism as due diligence.",
+    "advice": "Keep your beginner's openness, but bring a practical checklist. The Fool neither proves disloyalty nor guarantees that a risk will pay off."
+  },
+  {
+    "id": "M01",
+    "upright": "Initiative, focus, communication, skill, resourcefulness, and turning an idea into action. The tools are already within reach.",
+    "reversed": "Unused ability, scattered planning, or more talk than action; in some contexts, polished appearances, manipulation, or skill used poorly.",
+    "relationship": "Active communication and intentionally creating connection; the shadow is performing charm, controlling the story, or making promises without action.",
+    "career": "Showing your abilities, negotiating, starting a venture, or launching a project. Use verifiable results to distinguish substance from presentation.",
+    "advice": "List the resources you already have and define the first step. A reversal alone is not evidence that someone is deceptive."
+  },
+  {
+    "id": "M02",
+    "upright": "Intuition, observation, discretion, deep feeling, and information that is still taking shape. It favors listening and waiting for more evidence.",
+    "reversed": "Disconnection from intuition, suppressed feelings, superficial knowledge, unease around secrets, or silence that has become avoidance.",
+    "relationship": "Deep but unspoken feelings and a need for privacy; it can also suggest unclear communication, not automatic proof of a third party.",
+    "career": "Research, behind-the-scenes work, delaying disclosure, or checking hidden conditions. Do not replace contracts and data with intuition alone.",
+    "advice": "Record both your intuition and the facts, and do not present speculation as inside knowledge."
+  },
+  {
+    "id": "M03",
+    "upright": "Care, receptivity, creativity, comfort, and providing the conditions in which a person or project can grow.",
+    "reversed": "Overgiving, smothering care, dependence on approval, self-neglect, or blocked creativity and resources.",
+    "relationship": "Warmth, intimacy, care, and building a life together; the shadow is blurred boundaries or using care to earn love.",
+    "career": "Creative output, developing a team, product growth, or increasing resources. Watch the cost of pursuing comfort without oversight.",
+    "advice": "Ask what genuinely needs nurturing. This card cannot diagnose pregnancy or guarantee fertility outcomes."
+  },
+  {
+    "id": "M04",
+    "upright": "Rules, planning, order, leadership, accountability, and building systems that can be repeated.",
+    "reversed": "Excessive control, rigidity, conflict with authority, weak discipline, or a forceful exterior resting on an unstable foundation.",
+    "relationship": "Commitment, protection, and clear boundaries; the shadow is domination, limited emotional expression, or relating only on one's own terms.",
+    "career": "Management, systems, long-term planning, and risk control. Watch for bureaucracy and micromanagement.",
+    "advice": "State your principles clearly while leaving room for reasonable adjustment. Authority is not the same as always being right."
+  },
+  {
+    "id": "M05",
+    "upright": "Learning from an established tradition, accepting mentorship or professional process, joining a community, and affirming shared values.",
+    "reversed": "Questioning old rules, tension between personal beliefs and group norms, or a need for a new approach; it can also be rebellion without reflection.",
+    "relationship": "Shared values, formal commitment, and family or cultural norms shaping the relationship; it does not automatically mean marriage.",
+    "career": "Credentials, education, institutions, compliance, and following standards. In reversal, distinguish useful innovation from regulatory risk.",
+    "advice": "Understand what a rule is meant to protect before deciding whether to follow, negotiate, or change it."
+  },
+  {
+    "id": "M06",
+    "upright": "Attraction, mutual recognition, partnership, honesty, and choosing in line with core values at an important crossroads.",
+    "reversed": "Imbalance, conflicting values, broken communication, dishonesty with oneself, or difficulty accepting responsibility for a choice.",
+    "relationship": "Intimacy and agreement are central. For a single person, it may also concern self-integration or an important choice and does not promise a new partner.",
+    "career": "Partnerships, contracts, and career choices based on value alignment. Do not let enthusiasm obscure the terms.",
+    "advice": "Clarify boundaries and shared goals. The Lovers is not proof of a destined partner."
+  },
+  {
+    "id": "M07",
+    "upright": "Determination, discipline, competitiveness, movement, and staying on course under pressure.",
+    "reversed": "Conflicting directions, impatience, loss of control, speed without purpose, or delays caused by external resistance.",
+    "relationship": "Both people need a shared direction; it can also show one person forcing the pace and avoiding more nuanced communication.",
+    "career": "A concentrated push, exams, project momentum, or travel. Speed still needs rules and adequate resources.",
+    "advice": "Align on the destination before accelerating. This card is not a guarantee of travel safety."
+  },
+  {
+    "id": "M08",
+    "upright": "Patience, empathy, resilience, and guiding impulses rather than suppressing them, using steadiness to influence the situation.",
+    "reversed": "Self-doubt, low energy, emotional volatility, forced toughness, or mistaking gentleness for a lack of boundaries.",
+    "relationship": "Gentle communication, patience, and steady attraction; the shadow is enduring too much and quietly wearing yourself down.",
+    "career": "Consistent practice and composure under pressure rather than trying to solve everything with one forceful push.",
+    "advice": "Choose sustainable courage, and allow yourself to seek support and rest."
+  },
+  {
+    "id": "M09",
+    "upright": "Stepping away from noise, deep study, discernment, a mentor's experience, and independent thought.",
+    "reversed": "Isolation, withdrawal, overanalysis, or refusing support; it can also mark the end of solitude and readiness to reconnect.",
+    "relationship": "A need for space or a clearer understanding of your own needs; it does not necessarily indicate a breakup.",
+    "career": "Specialized study, review, consulting, or pausing noisy expansion. Watch perfectionism that blocks useful feedback.",
+    "advice": "Distinguish purposeful solitude from avoidance."
+  },
+  {
+    "id": "M10",
+    "upright": "Changing circumstances, a window of opportunity, an old cycle turning, and new conditions emerging.",
+    "reversed": "Repeating old patterns, poor timing, resistance to change, or outside delays; it does not mean permanently bad luck.",
+    "relationship": "A relationship entering a new phase or revisiting an old cycle. The key is recognizing what remains within your control.",
+    "career": "Changes in markets, policy, timing, or other variables. Preserve flexibility and do not treat a chance opportunity as a lasting guarantee.",
+    "advice": "Accept what you cannot control and manage what you can. This card does not prove that something is destined."
+  },
+  {
+    "id": "M11",
+    "upright": "Verifying information, fair process, clear decisions, and the connection between actions and consequences.",
+    "reversed": "Bias, unfairness, avoidance of responsibility, incomplete information, or being excessively harsh with yourself.",
+    "relationship": "Equality, honesty, boundaries, and accountability. Discuss the facts rather than judging on emotion alone.",
+    "career": "Contracts, reviews, rules, legal matters, or compliance. Seek the appropriate professional advice where needed.",
+    "advice": "Complete the evidence and take responsibility for your choice. Tarot cannot predict a court outcome or replace a lawyer."
+  },
+  {
+    "id": "M12",
+    "upright": "Waiting, suspension, giving up short-term momentum for insight, and viewing the matter from another perspective.",
+    "reversed": "Unproductive delay, a victim mindset, resistance to a necessary release, or a pause that may be nearing its end.",
+    "relationship": "A stalemate calls for a new perspective. Continually sacrificing yourself is not the same as love.",
+    "career": "A paused plan, reassessing costs, and accepting short-term opportunity costs. Avoid waiting without an endpoint.",
+    "advice": "Give the pause a purpose and a date for review."
+  },
+  {
+    "id": "M13",
+    "upright": "A role, relationship pattern, or form of a plan needs to end so that a new phase can begin.",
+    "reversed": "Resistance to an ending, recurring old patterns, stalled change, or an inner transformation not yet visible externally.",
+    "relationship": "An old way of relating must change. This may mean transformation or an ending, but one card cannot decide which.",
+    "career": "Closing a project, changing direction, or retiring ineffective methods. Account for the cost of exiting first.",
+    "advice": "Focus on what has truly reached its end. Never use this card to predict physical death."
+  },
+  {
+    "id": "M14",
+    "upright": "Patience, restorative adjustment, cooperation, testing the right balance, and gradual progress.",
+    "reversed": "Excess, extremes, disrupted timing, needs that are hard to reconcile, or an active process of recalibration.",
+    "relationship": "Mutual adaptation, learning how to work together, and repair. It does not ask one person to compromise without limit.",
+    "career": "Cross-functional integration, process improvement, and balancing quality with speed. Avoid all-or-nothing bets.",
+    "advice": "Experiment in small steps and keep adjusting. Treatment decisions still require qualified professionals."
+  },
+  {
+    "id": "M15",
+    "upright": "Compulsive cycles, bondage to material wants or desire, controlling dynamics, denial of the shadow, or intense attraction.",
+    "reversed": "Recognizing the chains, reclaiming choice, and leaving a harmful pattern; it can also mean denying the problem or repeatedly relapsing.",
+    "relationship": "Strong chemistry, jealousy, dependence, or unequal power. This card alone cannot establish abuse or infidelity.",
+    "career": "Financial temptation, overwork, attachment to status, or short-term gain that restricts long-term freedom.",
+    "advice": "Name the specific cost and identify practical support for leaving the pattern. Do not use this card to promote curses, spirits, fear, or coercive fees."
+  },
+  {
+    "id": "M16",
+    "upright": "Disruption, revelation, sudden change, and necessary dismantling. The scale of the impact depends on the position and real-world context.",
+    "reversed": "A crisis delayed or internalized, fear of change, avoiding the worst outcome, or rebuilding in private.",
+    "relationship": "Suppressed problems need attention, and the relationship's structure may change. This does not automatically mean disaster or separation.",
+    "career": "Abrupt plan changes, system failure, or organizational restructuring. Revisit contingency plans and foundational checks.",
+    "advice": "Stabilize the immediate situation, then identify what has actually failed. Do not predict accidents, death, or specific disasters."
+  },
+  {
+    "id": "M17",
+    "upright": "Returning confidence, inspiration, openness, renewal, and a willingness to invest in the future.",
+    "reversed": "Disappointment, disconnection from hope, idealization, or low confidence; hope may need to be rooted within yourself again.",
+    "relationship": "Honesty, healing, and mutual encouragement, with practical action needed to support the ideal.",
+    "career": "Long-term vision, personal visibility, creativity, and recovery; it does not promise immediate returns.",
+    "advice": "Choose one small action that can begin restoring confidence."
+  },
+  {
+    "id": "M18",
+    "upright": "Incomplete information, amplified emotion, vivid dreams and intuition, and difficulty distinguishing appearance from reality.",
+    "reversed": "The fog beginning to clear or suppressed emotions surfacing; it can also mean deeper confusion or self-deception.",
+    "relationship": "Insecurity, projection, or ambiguous communication. Unease is not proof of betrayal.",
+    "career": "Unclear conditions, anxiety affecting judgment, or strong creative imagination. Delay irreversible choices and verify the information.",
+    "advice": "Separate what is known, what is unknown, and what is feared. Do not treat a feeling as evidence."
+  },
+  {
+    "id": "M19",
+    "upright": "Success, understanding, warmth, openness, renewed vitality, and greater clarity.",
+    "reversed": "Reduced or delayed joy and results, blocked confidence, or optimism that overlooks details; the underlying brightness often remains.",
+    "relationship": "Honesty, shared happiness, and greater visibility for the relationship, while leaving room for complex feelings.",
+    "career": "Recognition, clear progress, and presenting results. Budgets and execution details still need review.",
+    "advice": "Bring the facts into the light and acknowledge real progress without promising complete success."
+  },
+  {
+    "id": "M20",
+    "upright": "Seeing past patterns clearly, accountability and forgiveness, an important review, and readiness for a new phase.",
+    "reversed": "Self-criticism, fear of judgment, avoiding a response, repeating old conclusions, or a decision that is still forming inwardly.",
+    "relationship": "The past needs honest attention, and the relationship faces a mature choice. This is not an outside moral verdict.",
+    "career": "Performance review, receiving results, or realigning with a sense of purpose. Let experience rather than shame guide the decision.",
+    "advice": "Distinguish accountability from self-blame, and name what you will do differently next time."
+  },
+  {
+    "id": "M21",
+    "upright": "Completion of a cycle, integrated achievement, belonging, graduation, travel, or an expanded sphere.",
+    "reversed": "Incomplete closure, delayed completion, pursuit of shortcuts, or outward success without an inner sense of completion.",
+    "relationship": "A relationship phase reaching maturity or completion. It can mean stable integration or consciously ending an old cycle.",
+    "career": "Delivery, graduation, global or cross-disciplinary opportunities, and long-term results. Finish the remaining details.",
+    "advice": "Close the loop and integrate what you learned before beginning a new Ace."
+  },
+  {
+    "id": "W01",
+    "upright": "A new idea, project, opening, or surge of enthusiasm. It is potential, not a finished result.",
+    "reversed": "A missing spark, delayed start, or low energy; it can also mean abundant inspiration without direction or practical support.",
+    "relationship": "New attraction, active contact, or renewed passion. This card alone does not indicate long-term commitment.",
+    "career": "A good time to pitch, prototype, or begin learning. Verify the resources and long-term viability first.",
+    "advice": "Turn the idea with the most vitality into one small, actionable step."
+  },
+  {
+    "id": "W02",
+    "upright": "Charting a route, widening your view, comparing options, and holding useful resources before setting out.",
+    "reversed": "Fear of the unknown, weak planning, limited ambition, or personal goals that need to be realigned.",
+    "relationship": "Discussing the relationship's direction and a shared future; it can also show someone still evaluating possibilities beyond the current arrangement.",
+    "career": "Strategy, cross-field or distant opportunities, and planning before commitment. Avoid drawing a grand vision without executing it.",
+    "advice": "Define your decision criteria and a deadline for the first stage."
+  },
+  {
+    "id": "W03",
+    "upright": "Progress, outside collaboration, expansion, results on their way, and preparation for the next stage.",
+    "reversed": "Delays, a narrow outlook, partnership or logistics problems, or expectations that do not match reality.",
+    "relationship": "Growing together, planning ahead, or navigating distance; the shadow is always looking to the next step and missing the present.",
+    "career": "Expansion, launches, international work, or cross-team collaboration. Check dependencies and the cost of waiting.",
+    "advice": "Keep sight of the horizon while following through on actions already underway."
+  },
+  {
+    "id": "W04",
+    "upright": "A milestone, reunion, community support, a welcoming home atmosphere, or progress worth celebrating.",
+    "reversed": "Weak support, tension at home or within a team, or a transitional period; it can also mean a private celebration or inner stability.",
+    "relationship": "The possibility of going public, sharing a home, or reaching a stable milestone; it does not guarantee marriage.",
+    "career": "Completing a project stage, strengthening the team, or celebrating a result. Build structure for the next stage as well.",
+    "advice": "Acknowledge the achievement and maintain a shared space where people feel secure."
+  },
+  {
+    "id": "W05",
+    "upright": "Competing views, constructive rivalry, unclear roles, or people pulling in different directions. The conflict is not necessarily malicious.",
+    "reversed": "Avoiding conflict, inner tension, easing friction, or surface peace while the real issue remains unspoken.",
+    "relationship": "Minor friction, competition for attention, or conflicting needs. It does not automatically point to a third party.",
+    "career": "A competitive environment, brainstorming, or teams contesting direction. Shared rules and goals are needed.",
+    "advice": "Shift the discussion from people against people to proposals measured against agreed standards."
+  },
+  {
+    "id": "W06",
+    "upright": "Recognition, support from leadership, a stage of success, public attention, and growing confidence.",
+    "reversed": "Delayed recognition, a private achievement, self-worth dependent on applause, or pride that undermines performance.",
+    "relationship": "Feeling seen and appreciated, or willingness to be public; the shadow is prioritizing image or winning over the relationship.",
+    "career": "Awards, signs of advancement, or presenting results. Recognition is not a guarantee of lasting performance.",
+    "advice": "Accept the recognition and record the repeatable practices behind the success."
+  },
+  {
+    "id": "W07",
+    "upright": "Holding your ground, meeting competition, protecting what you have built, and speaking for important values.",
+    "reversed": "Feeling overwhelmed, losing confidence, excessive defensiveness, or choosing to leave a fight that is not worth the cost.",
+    "relationship": "Defending boundaries or facing outside pressure on the relationship; it can also mean treating every conversation as an attack.",
+    "career": "Protecting a position, defending a proposal, or answering challenges. Separate core principles from negotiable details.",
+    "advice": "Choose what is truly worth defending; you do not have to answer every challenge."
+  },
+  {
+    "id": "W08",
+    "upright": "Rapid progress, timely communication, travel, decisions taking effect, and temporarily reduced resistance.",
+    "reversed": "Delays, crossed messages, haste, or a pace that has become unmanageable; it may be time to slow down deliberately.",
+    "relationship": "Frequent contact, faster development, or news across distance. Speed is not the same as depth.",
+    "career": "Fast delivery, a focused sprint, or incoming news. Important documents still need review.",
+    "advice": "Use the open window to move forward, but give key decisions one final check."
+  },
+  {
+    "id": "W09",
+    "upright": "Near completion, persistence, learning caution from experience, and protecting boundaries despite fatigue or past hurt.",
+    "reversed": "Exhaustion, suspicion, old wounds causing excessive defensiveness, or no longer being able to carry the load alone.",
+    "relationship": "Guardedness shaped by past experience. Safety matters, but the past should not convict the person in front of you.",
+    "career": "A final push, risk protection, and prolonged pressure. Assess whether continued effort is healthy.",
+    "advice": "Keep necessary boundaries while reserving resources for recovery and support."
+  },
+  {
+    "id": "W10",
+    "upright": "Carrying many responsibilities, nearing delivery, overload, or trying to shoulder everything alone.",
+    "reversed": "Setting burdens down and redistributing work; or refusing to delegate while pressure builds toward burnout.",
+    "relationship": "Practical responsibilities weighing on the relationship or an unequal burden. It is not direct evidence that love is absent.",
+    "career": "Peak workload, expanded duties, debt, or time pressure. Prioritize and delegate.",
+    "advice": "Clarify what must be done, what can be delegated, and what should stop."
+  },
+  {
+    "id": "W11",
+    "upright": "Curiosity, experimentation, an opportunity or message, and exploring with a light, open attitude.",
+    "reversed": "Short-lived enthusiasm, delay, lack of direction, an immature message, or provoking others to gain attention.",
+    "relationship": "Playful initiative, flirting, and willingness to explore; it does not yet demonstrate mature commitment.",
+    "career": "A new field, internship, or creative news. Experiment, while adding a plan and foundational skills.",
+    "advice": "Allow yourself to be a beginner, then test the enthusiasm with one real action."
+  },
+  {
+    "id": "W12",
+    "upright": "Passionate action, movement, boldness, rapid progress, and energizing the people around you.",
+    "reversed": "Impatience, anger, arriving and leaving quickly, ignoring consequences, or changing direction repeatedly.",
+    "relationship": "Intense pursuit and passion. Judge stability through consistent action and commitment, not charm alone.",
+    "career": "Seizing an opening, travel, or an entrepreneurial charge. Budget for risk and continued maintenance.",
+    "advice": "Keep the momentum, but turn promises into consistent actions that can be verified."
+  },
+  {
+    "id": "W13",
+    "upright": "Warm confidence, open expression, attracting resources, trusting your worth, and encouraging others.",
+    "reversed": "Self-doubt, jealousy, a need for attention, forcefulness masking insecurity, or energy directed into private life.",
+    "relationship": "Authentic attraction with both closeness and independence; the shadow is comparison or possessiveness.",
+    "career": "Creative leadership, community influence, and personal visibility. Avoid overcommitting or depending on recognition.",
+    "advice": "Act from steady confidence rather than trying to prove yourself by outshining someone else."
+  },
+  {
+    "id": "W14",
+    "upright": "Seeing the big picture, inspiring a team, acting decisively, and turning passion into a long-term direction.",
+    "reversed": "Domination, impulsiveness, unrealistic expectations, or setting direction without considering the cost of execution.",
+    "relationship": "Initiative, responsibility, and a clear direction; the shadow is trying to make the other person conform to one's own vision.",
+    "career": "Leading a project, strategic expansion, or entrepreneurial decisions. Test the vision against data and team feedback.",
+    "advice": "Take responsibility not only for starting, but also for consequences and completion."
+  },
+  {
+    "id": "C01",
+    "upright": "New feelings, openness to connection, empathy, emotional renewal, and the beginning of creative or spiritual fulfillment.",
+    "reversed": "Blocked or suppressed emotion, emptiness, or a need for self-care; feelings may also be present but not yet expressed outwardly.",
+    "relationship": "A new emotional spark or deeper exchange. It represents emotional potential, not a guaranteed relationship form.",
+    "career": "Renewed emotional engagement with work, creative inspiration, or interpersonal support. It does not by itself indicate material gain.",
+    "advice": "Let feelings move, and support them with clear communication."
+  },
+  {
+    "id": "C02",
+    "upright": "Mutual understanding, partnership, reconciliation, choosing one another, and balanced exchange.",
+    "reversed": "Inequality, broken communication, or damaged trust; it may also point to making peace with yourself first.",
+    "relationship": "A strong sign of reciprocity, but action and real-world conditions still matter. It does not prove a soulmate bond.",
+    "career": "Collaboration, interviews, or partnership agreements. Turn goodwill into clear roles and terms.",
+    "advice": "Confirm that both sides are giving, receiving, and accepting responsibility."
+  },
+  {
+    "id": "C03",
+    "upright": "Gathering, friendship, shared joy, support from friends, and a cooperative atmosphere.",
+    "reversed": "Excessive socializing, gossip, exclusion by a clique, or isolation; sometimes it signals a need for solitude rather than a fixed third-party meaning.",
+    "relationship": "Joy and a shared social circle. Discuss a possible triangle only with caution and only when supported by stronger evidence elsewhere.",
+    "career": "Team celebration, cooperation, and community resources. Mind the cost and boundaries of social activity.",
+    "advice": "Stay close to people who genuinely support you, and do not present suspicion as fact."
+  },
+  {
+    "id": "C04",
+    "upright": "Reduced interest, overlooking available opportunities, and a need for quiet reflection on what you genuinely want.",
+    "reversed": "Re-engagement and noticing an opportunity; or deeper withdrawal, depending on the surrounding context.",
+    "relationship": "Emotional fatigue or failing to notice connection. It does not necessarily mean a lack of love; an inner state may be consuming attention.",
+    "career": "Disengagement from the current situation, evaluating an opportunity, or low motivation. Identify the specific source of dissatisfaction.",
+    "advice": "Pause the automatic refusal and identify one option that may still deserve a response."
+  },
+  {
+    "id": "C05",
+    "upright": "Attention fixed on loss, disappointment, or regret. Grief deserves space, while remaining support should not be overlooked.",
+    "reversed": "Acceptance, forgiveness, and beginning to move forward; or grief that remains suppressed and difficult to release.",
+    "relationship": "Disappointment and the work of repair. It does not establish that a relationship must end.",
+    "career": "An unwelcome result, sunk costs, or a missed opening. Take stock of resources that remain available.",
+    "advice": "Honor the loss without letting it erase the rest of reality."
+  },
+  {
+    "id": "C06",
+    "upright": "Nostalgia, people or experiences from the past, kindness, innocence, safe memories, and simple pleasure.",
+    "reversed": "Being stuck in or idealizing the past; or becoming more independent and leaving an old home or identity behind.",
+    "relationship": "Familiar warmth or the return of an old connection. Someone reappearing does not guarantee reconciliation.",
+    "career": "Reusing an old skill, alumni ties, or historical resources. Do not let past standards confine present choices.",
+    "advice": "Keep what nourishes you from the past without recreating the past itself."
+  },
+  {
+    "id": "C07",
+    "upright": "Many options, projected wishes, incomplete information, and distraction by attractive possibilities.",
+    "reversed": "Values becoming clearer and choices narrowing; or greater confusion caused by choice overload.",
+    "relationship": "Idealizing someone, ambiguous options, or imagining more than the facts support. It does not automatically mean multiple partners.",
+    "career": "Many ideas or tempting proposals. Use due diligence, priorities, and practical testing.",
+    "advice": "Filter options by values, costs, and evidence rather than choosing the most enchanting picture."
+  },
+  {
+    "id": "C08",
+    "upright": "Turning away after disappointment, a deliberate departure, or a deeper search. Leaving may be difficult but necessary.",
+    "reversed": "Fear of leaving, repeatedly returning, or drifting without direction; it can also mean deciding to try once more.",
+    "relationship": "Emotional withdrawal or reassessment. Position and surrounding cards determine whether this becomes an ending; one card cannot declare a breakup.",
+    "career": "Leaving a direction that lacks meaning or revising your goal. Plan for the costs of exit and transition.",
+    "advice": "Clarify why you are leaving and what you are moving toward, rather than fleeing pain without direction."
+  },
+  {
+    "id": "C09",
+    "upright": "Satisfaction, gratitude, comfort, a wish reaching a stage of fulfillment, and enjoyment of results.",
+    "reversed": "Outward abundance without fulfillment, excess, or vanity; standards for happiness may need to return to an inner foundation.",
+    "relationship": "Enjoying the connection while remaining a whole person; the shadow is centering only your own comfort.",
+    "career": "Achieving a personal goal and enjoying a reward. Avoid allowing consumption or complacency to weaken long-term foundations.",
+    "advice": "Enjoy the result, and ask whether this satisfaction is sustainable and makes room for others."
+  },
+  {
+    "id": "C10",
+    "upright": "Harmony in a family or group, lasting connection, a shared vision, and emotional safety.",
+    "reversed": "Family tension, conflicting shared values, outward harmony masking distance, or a need to redefine happiness.",
+    "relationship": "Strong potential for lasting emotional connection, while still representing a current trend rather than a permanent guarantee.",
+    "career": "A supportive team and alignment between work, life, and values. Material outcomes require additional practical evidence.",
+    "advice": "Turn the ideal of happiness into daily practices in which everyone takes part."
+  },
+  {
+    "id": "C11",
+    "upright": "Sincere expression, an apology or invitation, a creative message, and permission to be tender and curious.",
+    "reversed": "Emotional immaturity, excessive fantasy, fear of expression, distrust of intuition, or an unreliable message.",
+    "relationship": "A gentle gesture or affectionate message. Maturity and consistency remain to be seen.",
+    "career": "Creative learning, friendly news, or a fresh emotional perspective on work. Add structure and verification.",
+    "advice": "Accept the feeling without letting imagination replace communication."
+  },
+  {
+    "id": "C12",
+    "upright": "Courtship, a proposal, creative pursuit, diplomacy, and acting on genuine feeling.",
+    "reversed": "Moodiness, disappointed ideals, beautiful but unstable promises, or using romance to avoid reality.",
+    "relationship": "Romantic action and emotional pursuit are prominent. Judge reliability by sustained behavior.",
+    "career": "A creative proposal, relationship-building, or ideal-driven work. Contracts and budgets still require more than goodwill.",
+    "advice": "Bring poetry and facts to the same table, and ask how each promise will be carried out."
+  },
+  {
+    "id": "C13",
+    "upright": "Listening, understanding complex emotions, gentle intuition, and creating a space where feelings can be safe.",
+    "reversed": "Overgiving, codependence, emotional overwhelm, poor self-care, or feelings kept mostly inside.",
+    "relationship": "Deep affection and understanding, with boundaries still needed. Guessing another person's feelings is not a substitute for communication.",
+    "career": "Counseling, creativity, care work, and interpersonal insight. Avoid absorbing everyone else's stress.",
+    "advice": "While empathizing with others, check your own capacity and boundaries."
+  },
+  {
+    "id": "C14",
+    "upright": "Calm without coldness, diplomacy, emotional responsibility, and reliable support.",
+    "reversed": "Emotional manipulation, suppression, inconsistency, a calm exterior over inner imbalance, or advice shaped by self-interest.",
+    "relationship": "Mature care that can discuss feelings and accept responsibility; the shadow is using silence or emotion to control the bond.",
+    "career": "Crisis communication, leadership, and negotiation. Financial judgment still needs data rather than personal sentiment.",
+    "advice": "Make room for feelings without letting them take control, and express boundaries clearly."
+  },
+  {
+    "id": "S01",
+    "upright": "Seeing the key issue, forming a new perspective, speaking directly, and cutting through confusion. Clarity can also bring sharp conflict.",
+    "reversed": "Confused judgment, distorted information, hurtful expression, or an idea not yet fully formed; an answer may also be taking shape internally.",
+    "relationship": "An honest conversation that defines the relationship. Truthfulness does not excuse a harmful delivery.",
+    "career": "Analysis, exams, key contract language, or a new strategy. Verify the evidence and wording.",
+    "advice": "Define the real issue in one statement that can be checked against evidence."
+  },
+  {
+    "id": "S02",
+    "upright": "Difficulty choosing, insufficient information, or separating emotion from the issue to preserve surface calm.",
+    "reversed": "Information overload or a worsening stalemate; or finally becoming willing to face the facts and choose.",
+    "relationship": "Silence, avoidance of a sensitive subject, or both people protecting themselves. It is not proof that feelings are absent.",
+    "career": "Weighing two paths or a paused decision. Gather missing information and set a deadline.",
+    "advice": "Recognize that not choosing is also a choice, and address the most important unknown first."
+  },
+  {
+    "id": "S03",
+    "upright": "Grief, hurtful words, a rupture, or reality piercing an expectation. The emotion needs to be acknowledged.",
+    "reversed": "Releasing pain, forgiveness, and recovery; or negative self-talk and a wound that has not yet been processed.",
+    "relationship": "Heartache or conflict is clear, but this card alone cannot establish infidelity or a triangle.",
+    "career": "Painful feedback, a team fracture, or bad news. Address the facts and impact before attempting repair.",
+    "advice": "Do not minimize the pain or declare the current wound a permanent outcome."
+  },
+  {
+    "id": "S04",
+    "upright": "A need to pause, sleep, recover, delay a response, and preserve mental energy for the next stage.",
+    "reversed": "Burnout, restlessness, or remaining paused too long; it can also mean returning to action after recovery.",
+    "relationship": "A cooling-off period or reduced contact to sort through thoughts. Agree on when to talk again rather than withdrawing indefinitely.",
+    "career": "Leave, review, research, or waiting. Do not keep forcing productivity under extreme pressure.",
+    "advice": "Treat rest as part of the plan and set a point for reassessment."
+  },
+  {
+    "id": "S05",
+    "upright": "Conflict, harming others in order to win, victory that costs trust, or a need to leave a destructive contest.",
+    "reversed": "Reconciliation, making amends, and releasing the need to win; or resentment that remains after the visible conflict ends.",
+    "relationship": "Attack and defense, sarcasm, or being right taking priority over understanding. Pay attention to verbal or psychological harm.",
+    "career": "Office politics, unfair competition, or failed negotiation. Protect records and nonnegotiable boundaries.",
+    "advice": "Ask whether you are willing to bear the cost even if you win."
+  },
+  {
+    "id": "S06",
+    "upright": "Leaving conflict, relocation, gradual recovery, and accepting help. Not every issue is resolved, but the direction is improving.",
+    "reversed": "Resistance to transition, old burdens following you, unfinished business, or an inward change not yet visible.",
+    "relationship": "Repairing together or taking distance to move beyond conflict. It does not automatically mean a permanent departure.",
+    "career": "Changing roles, moving, improving a process, or managing a transition. Address the remaining legacy issues.",
+    "advice": "Choose a more manageable environment while working on patterns that cannot simply be left behind."
+  },
+  {
+    "id": "S07",
+    "upright": "Independent strategy, withholding information, or avoidance; its shadow can be deception, evading responsibility, or acting in secret.",
+    "reversed": "Confession, a failed strategy, or reconsidering an approach; it can also mean self-deception or mounting pressure around a secret.",
+    "relationship": "Unclear communication or avoidance of a direct conversation. Evidence is required; one card cannot prove betrayal.",
+    "career": "Confidential strategy, office politics, or compliance risk. Distinguish legitimate confidentiality from dishonesty.",
+    "advice": "Ask whether you would still accept responsibility for this strategy if it became public."
+  },
+  {
+    "id": "S08",
+    "upright": "Feeling trapped, negative assumptions, self-doubt, or waiting for outside permission.",
+    "reversed": "Seeing an exit, releasing constraints, or changing perspective; inner criticism may still be strong, and freedom itself may feel unsettling.",
+    "relationship": "Fear of speaking or a belief that the dynamic cannot change. If coercion or violence exists in reality, prioritize safe support.",
+    "career": "Impostor feelings, restrictive rules, or overlooked choices. Separate real limits from assumptions and try one small available action.",
+    "advice": "Do not deny real obstacles, but look for one choice that still belongs to you."
+  },
+  {
+    "id": "S09",
+    "upright": "Sleepless worry, catastrophic imagining, shame, or carrying distress alone. The pain is real, but the feared scenario may not be factual.",
+    "reversed": "Beginning to seek help and release worry; or fear becoming more deeply internalized and difficult to express.",
+    "relationship": "Intense anxiety about relationship outcomes. An anxious image is not evidence of another person's actions.",
+    "career": "Pressure around performance, exams, or money. Break the problem into parts and seek practical support.",
+    "advice": "First steady yourself and reality-check with someone trustworthy. If there is self-harm or immediate danger, stop the reading and seek urgent local support."
+  },
+  {
+    "id": "S10",
+    "upright": "Collapse, defeat, or an ending that can no longer be denied. The worst phase becoming visible also allows a new cycle to begin.",
+    "reversed": "Recovery, renewal, and harm receding; or refusing an ending, delaying a crisis, and recurring old pain.",
+    "relationship": "A particular interaction pattern has reached its limit. It does not mean that life or every relationship is over.",
+    "career": "Project failure, leaving a role, or ending a strategy. Limit losses, review what happened, and protect essential resources.",
+    "advice": "Neither dramatize nor minimize the situation; identify what must end and what recovery requires."
+  },
+  {
+    "id": "S11",
+    "upright": "Questioning, learning, alertness, direct but still-developing communication, and gathering information.",
+    "reversed": "Talking without action, spreading unverified claims, spying, speaking too soon, or scattered attention.",
+    "relationship": "Curiosity about the other person and frequent but guarded communication. Do not encourage surveillance or invasions of privacy.",
+    "career": "Research, writing, exam preparation, or new information. Verify before sharing.",
+    "advice": "Turn suspicion into a question that respects the other person's boundaries."
+  },
+  {
+    "id": "S12",
+    "upright": "A quick decision, ambition, willingness to debate, and charging toward a goal. It is efficient but may lack sensitivity.",
+    "reversed": "Recklessness, aggression, unclear direction, acting before the facts are complete, or mental exhaustion.",
+    "relationship": "Direct negotiation or heated conflict. Leave room for emotion and listening.",
+    "career": "A deadline sprint, debate, or crisis response. Speed cannot replace accuracy.",
+    "advice": "Before acting, test the opposing case once and review both consequences and wording."
+  },
+  {
+    "id": "S13",
+    "upright": "Seeing through complexity, being fair but direct, judging from experience, and refusing to sacrifice facts for approval.",
+    "reversed": "Bitterness, excessive criticism, coldness, defensive speech, or a truth kept inward rather than expressed.",
+    "relationship": "Honesty and boundaries are needed. Directness does not mean an absence of feeling and should not excuse cruelty.",
+    "career": "Professional analysis, editing, decisions, or negotiation. Watch for bias and punishing standards.",
+    "advice": "Let clarity serve understanding rather than superiority."
+  },
+  {
+    "id": "S14",
+    "upright": "Logic, professional standards, strategy, lawful process, and using clear principles to govern complexity.",
+    "reversed": "Manipulating information, abusing authority, coldness, ignoring people in favor of logic, or temporarily impaired judgment.",
+    "relationship": "Clear definitions and rational communication; the shadow is an interrogative dynamic or emotional distance.",
+    "career": "Expertise, management, law, or policy. Matters requiring professional judgment still call for a qualified practitioner.",
+    "advice": "Make the decision criteria transparent and give affected people room to speak."
+  },
+  {
+    "id": "P01",
+    "upright": "A new opening in work, money, or learning, a practical beginning, and a chance to build a stable foundation.",
+    "reversed": "A missed opening, weak planning, unstable resources, or a delayed start; it can also mean overvaluing material returns.",
+    "relationship": "A willingness to invest time and practical care. Emotional depth still requires other supporting information.",
+    "career": "An internship, income opportunity, budget, or skill foundation. An opportunity does not guarantee profit, so conduct due diligence.",
+    "advice": "Turn the opportunity into a timeline, a budget, and a next step."
+  },
+  {
+    "id": "P02",
+    "upright": "Managing several demands at once, adapting to change, balancing cash flow or time, and staying flexible.",
+    "reversed": "Overcommitment, disorder, imbalance, a need to reprioritize, or one responsibility close to being dropped.",
+    "relationship": "Balancing the relationship with other duties; the shadow is repeatedly leaving the other person waiting.",
+    "career": "Multiple projects, side work, or fluctuating income and expenses. Build a buffer and clear priority rules.",
+    "advice": "Do not seek perfect stillness; protect the most important and irreversible matters first."
+  },
+  {
+    "id": "P03",
+    "upright": "Teamwork, specialized roles, learning, craftsmanship, and moving a plan into construction.",
+    "reversed": "Poor cooperation, inconsistent standards, fragmented work, unrecognized ability, or careless execution.",
+    "relationship": "A willingness to build together and discuss responsibilities. One person cannot maintain the relationship alone.",
+    "career": "Project collaboration, mentor feedback, and portfolio work. Align on quality standards and roles first.",
+    "advice": "Find the right collaborators, clarify handoffs, and accept specific feedback."
+  },
+  {
+    "id": "P04",
+    "upright": "Saving, control, caution, and protected boundaries; its shadow is scarcity thinking and possessiveness.",
+    "reversed": "Releasing control and beginning to share; or uncontrolled spending, greed, and increasing insecurity.",
+    "relationship": "A strong need for security or holding too tightly to emotion or resources. Commitment and possession are not the same.",
+    "career": "Cost control, reserves, and risk aversion. Balance safety with necessary investment.",
+    "advice": "Name what you are protecting and what holding on too tightly is costing you."
+  },
+  {
+    "id": "P05",
+    "upright": "Financial or work pressure, isolation, low self-worth, and attention fixed on what is missing.",
+    "reversed": "Gradual recovery, accepting help, and improving resources; or external improvement while the sense of scarcity remains.",
+    "relationship": "Facing hardship together or feeling left out. It does not mean support within the relationship is impossible.",
+    "career": "Unemployment, a tight budget, or inadequate resources. Prioritize practical assistance and qualified advice.",
+    "advice": "Look for available support first. Do not treat this card as a certain prediction of illness, bankruptcy, or homelessness."
+  },
+  {
+    "id": "P06",
+    "upright": "Generosity, assistance, fair compensation, and willingness to share, with attention to who controls distribution.",
+    "reversed": "Help with strings attached, unequal exchange, debt, overgiving, or refusing to receive.",
+    "relationship": "Whether effort is mutual and support is controlling. Consider capacity and willingness, not only equal quantities.",
+    "career": "Pay, grants, loans, or charity. Terms and power relationships need to be transparent.",
+    "advice": "Clarify the conditions, boundaries, and sustainability of giving."
+  },
+  {
+    "id": "P07",
+    "upright": "Patience, reviewing progress, delayed returns, and deciding whether to keep cultivating or change the method.",
+    "reversed": "Poor return on effort, weak long-term vision, impatience, or resources invested in the wrong place.",
+    "relationship": "Assessing investment in the relationship and its pace of growth. Slow progress is not failure, but both people must maintain it.",
+    "career": "Long-term projects, investment review, or building skill. It does not provide a forecast of security prices.",
+    "advice": "Compare what has been invested, what has been produced, and future costs before deciding; watch for the sunk-cost trap."
+  },
+  {
+    "id": "P08",
+    "upright": "Apprenticeship, deliberate practice, careful attention to detail, and building credibility through consistent work.",
+    "reversed": "Careless effort, empty repetition, a wrong direction, perfectionism, or work addiction.",
+    "relationship": "A willingness to sustain connection through daily action; the shadow is treating the bond as a task or working without relating.",
+    "career": "Training, credentials, quality work, and steady output. Avoid mechanical repetition without feedback.",
+    "advice": "Choose one measurable skill and build a practice, feedback, and improvement cycle."
+  },
+  {
+    "id": "P09",
+    "upright": "Self-sufficiency, financial or practical stability, discernment, and enjoying space earned through sustained effort.",
+    "reversed": "Overspending, outer success masking insecurity, overwork, or a need to rebuild self-worth.",
+    "relationship": "Independence that makes connection a choice; the shadow is fear of dependence or imbalance between the relationship and personal life.",
+    "career": "Professional achievement, personal reputation, and stable accumulation. Do not mistake a luxurious appearance for real assets.",
+    "advice": "Acknowledge your value while checking whether the achievement rests on a sustainable foundation."
+  },
+  {
+    "id": "P10",
+    "upright": "Long-term security, family or organizational resources, sustainable results, legacy, and belonging.",
+    "reversed": "An unstable foundation, family conflict over money, short-lived success, pressure from tradition, or a broken legacy.",
+    "relationship": "Building a long-term life while family and value systems influence the bond. One card cannot guarantee marriage or wealth.",
+    "career": "Business stability, long-range planning, inheritance, or family assets. Seek legal and financial professionals for related decisions.",
+    "advice": "Ask not only what the structure provides now, but also what it can responsibly leave behind."
+  },
+  {
+    "id": "P11",
+    "upright": "A new course or job message, willingness to begin with fundamentals, and turning a goal into a plan.",
+    "reversed": "Delay, low commitment, wanting results without practice, or an unrealistic financial or study plan.",
+    "relationship": "Slow, practical investment and showing care through action; the expression may not be especially romantic.",
+    "career": "Apprenticeship, credentials, basic budgeting, or a savings goal. Begin small and strengthen the fundamentals.",
+    "advice": "Set a realistic, trackable practice or savings goal that you can sustain."
+  },
+  {
+    "id": "P12",
+    "upright": "Steady progress, keeping commitments, and valuing quality and process. The pace is slow but predictable.",
+    "reversed": "Stagnation, boredom, rigidity, or work addiction; it may also call for rebuilding discipline and basic processes.",
+    "relationship": "Loyalty, practical care, and slow-growing warmth; the shadow is lack of change or mistaking inertia for commitment.",
+    "career": "Consistent delivery, routine management, and long-term accumulation. Excessive caution can miss a needed adjustment window.",
+    "advice": "Keep a reliable pace while checking regularly that the route is still right."
+  },
+  {
+    "id": "P13",
+    "upright": "Warm practicality, balancing work and life, creating comfort and stability, and managing limited resources well.",
+    "reversed": "Poor self-care, work-family conflict, possessiveness, material control, or rebuilding personal independence.",
+    "relationship": "Reliability and care for daily security. Do not assign all caregiving responsibility to one person by default.",
+    "career": "Operations, budgeting, care work, and steady management. Avoid taking on too much.",
+    "advice": "Include your own time, body, and rest when allocating resources."
+  },
+  {
+    "id": "P14",
+    "upright": "Business skill, discipline, reliable provision, wise use of resources, and building sustainable systems.",
+    "reversed": "Greed, fixation on status, stubbornness, reckless or poor financial management, or using resources to control others.",
+    "relationship": "Stability and practical commitment; the shadow is placing money, security, or status above emotional connection.",
+    "career": "Enterprise, asset management, and a mature professional position. Investments still require qualified advice and due diligence.",
+    "advice": "Measure success against ethics, relationships, and long-term costs as well as material results."
+  }
+]

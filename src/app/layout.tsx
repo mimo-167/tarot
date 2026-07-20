@@ -1,23 +1,74 @@
 import type { Metadata, Viewport } from "next";
+import { LazyGoogleAnalytics } from "@/components/LazyGoogleAnalytics";
+import { getRequestLocale } from "@/i18n/server";
+import {
+  serializedStructuredData,
+  SITE_NAME,
+  SITE_NAME_EN,
+  SITE_URL,
+  SOCIAL_IMAGE_PATH,
+  seoByLocale,
+} from "@/lib/seo";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "星月塔罗｜沉浸式 RWS 塔罗",
-  description: "以仪式感、自由抽牌与 AI 辅助解读，陪你安静看见问题的不同侧面。",
-  applicationName: "星月塔罗",
-  keywords: ["塔罗", "RWS", "韦特塔罗", "AI 解读", "每日抽牌"],
-  icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const seo = seoByLocale[locale];
+  return {
+    metadataBase: SITE_URL,
+    title: seo.title,
+    description: seo.description,
+    applicationName: locale === "zh-CN" ? SITE_NAME : SITE_NAME_EN,
+    keywords: seo.keywords,
+    alternates: { canonical: "/" },
+    icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
+    openGraph: {
+      type: "website",
+      url: "/",
+      siteName: locale === "zh-CN" ? SITE_NAME : SITE_NAME_EN,
+      title: seo.title,
+      description: seo.description,
+      locale: seo.ogLocale,
+      images: [{ url: SOCIAL_IMAGE_PATH, width: 1200, height: 630, alt: seo.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.title,
+      description: seo.description,
+      images: [SOCIAL_IMAGE_PATH],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#09060f",
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getRequestLocale();
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang={locale}>
+      <body>
+        <script
+          id="website-structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializedStructuredData }}
+        />
+        {children}
+        <LazyGoogleAnalytics />
+      </body>
     </html>
   );
 }

@@ -1,31 +1,49 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import cardsJson from "@/data/tarot-cards.json";
-import { spreads } from "@/data/spreads";
-import { TarotAudioEngine } from "@/lib/audio-engine";
-import {
-  buildLocalSynthesis,
-  createTableDeck,
-  localMeaningFor,
-  orientationLabel,
-  type TableCard,
-} from "@/lib/game";
-import { sharePoster } from "@/lib/share-poster";
+import { localizeSpread, spreads } from "@/data/spreads";
+import { appMessages } from "@/i18n/messages";
+import type { Locale } from "@/i18n/config";
 import type { AppView, DrawnCard, ReadingRequest, Spread, TarotCard } from "@/types/tarot";
 
-const cards = cardsJson as TarotCard[];
+type AudioEngine = import("@/lib/audio-engine").TarotAudioEngine;
+type TarotGame = typeof import("@/lib/game");
+type TableCard = import("@/lib/game").TableCard;
+type TarotResources = { cards: TarotCard[]; game: TarotGame };
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), {
+  loading: () => <p aria-live="polite">…</p>,
+});
+let tarotResourcesPromise: Promise<TarotResources> | undefined;
+const loadTarotResources = () => {
+  tarotResourcesPromise ??= Promise.all([
+    import("@/data/tarot-cards.json"),
+    import("@/lib/game"),
+  ]).then(([cardsModule, game]) => ({ cards: cardsModule.default as TarotCard[], game }));
+  return tarotResourcesPromise;
+};
 const DAILY_SPREAD: Spread = {
   id: "daily",
   name: "每日一牌",
+  nameEn: "Daily Card",
   eyebrow: "今日指引",
+  eyebrowEn: "Today's Guidance",
   description: "用一张牌观察今天值得留意的主题。",
+  descriptionEn: "Use one card to notice a theme worth carrying through today.",
   positions: ["今日指引"],
-  category: "通用",
+  positionsEn: ["Today's guidance"],
+  category: "general",
 };
-const todayKey = () => new Intl.DateTimeFormat("zh-CN", { dateStyle: "short" }).format(new Date());
+const localDayKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+const displayDate = (locale: Locale, date = new Date()) =>
+  new Intl.DateTimeFormat(locale, { year: "numeric", month: "long", day: "numeric" }).format(date);
 const wait = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 const secureRandom = () => {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
@@ -37,6 +55,7 @@ const secureRandom = () => {
 type QuestionDraft = { question: string; context: string; timeframe: string; optionA: string; optionB: string };
 type DailyRecord = { date: string; cardId: string; orientation: "upright" | "reversed"; revealed: boolean };
 type Notice = { text: string; tone?: "default" | "error" } | null;
+type SpreadFilter = "all" | Spread["category"];
 
 const initialQuestion: QuestionDraft = {
   question: "",
@@ -59,12 +78,15 @@ function Icon({ name }: { name: "moon" | "spark" | "heart" | "volume" | "mute" |
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="icon">{paths[name]}</svg>;
 }
 
-export function TarotExperience() {
+export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
+  const [locale, setLocale] = useState<Locale>(initialLocale);
+  const localeRef = useRef(initialLocale);
+  const copy = appMessages[locale];
   const [view, setView] = useState<AppView>("home");
   const [selectedSpread, setSelectedSpread] = useState<Spread>(spreads[0]);
   const [question, setQuestion] = useState<QuestionDraft>(initialQuestion);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [spreadFilter, setSpreadFilter] = useState("全部");
+  const [spreadFilter, setSpreadFilter] = useState<SpreadFilter>("all");
   const [deck, setDeck] = useState<TableCard[]>([]);
   const [picked, setPicked] = useState<DrawnCard[]>([]);
   const pickedRef = useRef<DrawnCard[]>([]);
@@ -81,7 +103,26 @@ export function TarotExperience() {
   const [notice, setNotice] = useState<Notice>(null);
   const [ambientOn, setAmbientOn] = useState(false);
   const [sfxOn, setSfxOn] = useState(true);
-  const audio = useRef<TarotAudioEngine | null>(null);
+  const audio = useRef<AudioEngine | null>(null);
+  const tarotResources = useRef<TarotResources | null>(null);
+  const [loadedCards, setLoadedCards] = useState<TarotCard[] | null>(null);
+  const [tarotGame, setTarotGame] = useState<TarotGame | null>(null);
+
+  useEffect(() => {
+    localeRef.current = locale;
+    document.documentElement.lang = locale;
+    document.title = appMessages[locale].documentTitle;
+  }, [locale]);
+
+  const toggleLanguage = () => {
+    const next: Locale = locale === "zh-CN" ? "en" : "zh-CN";
+    localeRef.current = next;
+    setLocale(next);
+    setAiReading("");
+    setAiError("");
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `tarot_locale=${encodeURIComponent(next)}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
+  };
 
   const showNotice = useCallback((text: string, tone: NonNullable<Notice>["tone"] = "default") => {
     setNotice({ text, tone });
@@ -95,7 +136,14 @@ export function TarotExperience() {
         setAmbientOn(localStorage.getItem("xingyue:ambient") === "true");
         setSfxOn(localStorage.getItem("xingyue:sfx") !== "false");
         const storedDaily = JSON.parse(localStorage.getItem("xingyue:daily") || "null") as DailyRecord | null;
-        if (storedDaily?.date === todayKey()) setDaily(storedDaily);
+        const today = localDayKey();
+        const legacyToday = new Intl.DateTimeFormat("zh-CN", { dateStyle: "short" }).format(new Date());
+        if (storedDaily?.date === today) setDaily(storedDaily);
+        else if (storedDaily?.date === legacyToday) {
+          const migrated = { ...storedDaily, date: today };
+          setDaily(migrated);
+          localStorage.setItem("xingyue:daily", JSON.stringify(migrated));
+        }
       } catch {
         // A privacy mode may make localStorage unavailable; the core ritual still works.
       }
@@ -107,19 +155,32 @@ export function TarotExperience() {
     if (!ambientOn) audio.current?.stopAmbient();
   }, [ambientOn]);
 
-  const play = (kind: "select" | "shuffle" | "reveal") => {
-    if (!sfxOn) return;
-    audio.current ??= new TarotAudioEngine();
-    audio.current.chime(kind);
+  const loadAudio = async () => {
+    if (audio.current) return audio.current;
+    const { TarotAudioEngine } = await import("@/lib/audio-engine");
+    audio.current = new TarotAudioEngine();
+    return audio.current;
   };
 
-  const toggleAmbient = () => {
-    audio.current ??= new TarotAudioEngine();
+  const ensureCardCatalog = useCallback(async () => {
+    tarotResources.current ??= await loadTarotResources();
+    setLoadedCards((current) => current ?? tarotResources.current?.cards ?? null);
+    setTarotGame((current) => current ?? tarotResources.current?.game ?? null);
+    return tarotResources.current;
+  }, []);
+
+  const play = (kind: "select" | "shuffle" | "reveal") => {
+    if (!sfxOn) return;
+    void loadAudio().then((engine) => engine.chime(kind));
+  };
+
+  const toggleAmbient = async () => {
+    const engine = await loadAudio();
     const next = !ambientOn;
     setAmbientOn(next);
     localStorage.setItem("xingyue:ambient", String(next));
-    if (next) audio.current.startAmbient();
-    else audio.current.stopAmbient();
+    if (next) engine.startAmbient();
+    else engine.stopAmbient();
   };
 
   const toggleSfx = () => {
@@ -138,7 +199,7 @@ export function TarotExperience() {
     const next = favorites.includes(id) ? favorites.filter((item) => item !== id) : [...favorites, id];
     setFavorites(next);
     localStorage.setItem("xingyue:favorites", JSON.stringify(next));
-    showNotice(next.includes(id) ? "已收藏这个牌阵" : "已取消收藏");
+    showNotice(next.includes(id) ? copy.favoriteAdded : copy.favoriteRemoved);
   };
 
   const resetReadingState = useCallback((newDeck = true) => {
@@ -148,14 +209,16 @@ export function TarotExperience() {
     setReadingOpen(false);
     setAiReading("");
     setAiError("");
-    if (newDeck) setDeck(createTableDeck(cards));
+    const resources = tarotResources.current;
+    if (newDeck && resources) setDeck(resources.game.createTableDeck(resources.cards));
   }, []);
 
-  const enterTable = () => {
+  const enterTable = async () => {
     if (selectedSpread.needsOptions && (!question.optionA.trim() || !question.optionB.trim())) {
-      showNotice("请先写清 A、B 两个选项", "error");
+      showNotice(copy.optionsRequired, "error");
       return;
     }
+    await ensureCardCatalog();
     resetReadingState(true);
     setView("table");
   };
@@ -192,7 +255,8 @@ export function TarotExperience() {
     setShufflePhase("weave");
     await wait(780);
     setShufflePhase("scatter");
-    setDeck(createTableDeck(cards));
+    const resources = tarotResources.current;
+    if (resources) setDeck(resources.game.createTableDeck(resources.cards));
     await wait(760);
     setShufflePhase("idle");
     setShuffling(false);
@@ -223,11 +287,12 @@ export function TarotExperience() {
 
   const requestAiReading = async () => {
     if (!allRevealed || aiLoading) return;
-    const day = new Date().toISOString().slice(0, 10);
+    const requestLocale = locale;
+    const day = localDayKey();
     const counterKey = "xingyue:ai-usage";
     const usage = JSON.parse(localStorage.getItem(counterKey) || "null") as { date: string; count: number } | null;
     if (usage?.date === day && usage.count >= 3) {
-      setAiError("今天已完成 3 次 AI 辅助解读。可以继续查看本地牌义，明天再来。 ");
+      setAiError(copy.aiDailyLimit);
       return;
     }
     setAiLoading(true);
@@ -240,29 +305,32 @@ export function TarotExperience() {
       localStorage.setItem("xingyue:client-id", clientId);
     }
     const payload: ReadingRequest = {
+      locale: requestLocale,
       question: question.question,
       context: question.context,
       timeframe: question.timeframe,
-      spread: selectedSpread,
+      spread: localizeSpread(selectedSpread, requestLocale),
       options: selectedSpread.needsOptions ? { a: question.optionA, b: question.optionB } : null,
       cards: picked.map((card, index) => ({
         id: card.id,
-        position: selectedSpread.positions[index],
+        position: localizeSpread(selectedSpread, requestLocale).positions[index],
         orientation: card.orientation,
       })),
     };
     try {
       const response = await fetch("/api/reading", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-tarot-client": clientId },
+        headers: { "Content-Type": "application/json", "x-tarot-client": clientId, "x-tarot-locale": requestLocale },
         body: JSON.stringify(payload),
       });
       const result = (await response.json()) as { reading?: string; error?: string };
-      if (!response.ok || !result.reading) throw new Error(result.error || "AI 解读暂时没有回应");
-      setAiReading(result.reading);
+      if (!response.ok || !result.reading) throw new Error(result.error || appMessages[requestLocale].aiUnavailable);
+      if (localeRef.current === requestLocale) setAiReading(result.reading);
       localStorage.setItem(counterKey, JSON.stringify({ date: day, count: usage?.date === day ? usage.count + 1 : 1 }));
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : "AI 解读暂时没有回应");
+      if (localeRef.current === requestLocale) {
+        setAiError(error instanceof Error ? error.message : appMessages[requestLocale].aiUnavailable);
+      }
     } finally {
       setAiLoading(false);
     }
@@ -270,19 +338,26 @@ export function TarotExperience() {
 
   const handleShare = async (shareCards: DrawnCard[], spread: Spread) => {
     try {
-      const message = await sharePoster(shareCards, spread);
+      const { sharePoster } = await import("@/lib/share-poster");
+      const message = await sharePoster(shareCards, spread, locale);
       showNotice(message);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      showNotice(error instanceof Error ? error.message : "分享图生成失败", "error");
+      showNotice(error instanceof Error ? error.message : copy.shareFailed, "error");
     }
   };
 
-  const drawDaily = () => {
+  const openDaily = async () => {
+    await ensureCardCatalog();
+    setView("daily");
+  };
+
+  const drawDaily = async () => {
     if (daily) return;
+    const { cards } = await ensureCardCatalog();
     const card = cards[Math.floor(secureRandom() * cards.length)];
     const record: DailyRecord = {
-      date: todayKey(),
+      date: localDayKey(),
       cardId: card.id,
       orientation: secureRandom() < 0.5 ? "upright" : "reversed",
       revealed: false,
@@ -300,44 +375,47 @@ export function TarotExperience() {
     play("reveal");
   };
 
-  const dailyCard = daily ? cards.find((card) => card.id === daily.cardId) : null;
+  const dailyCard = daily ? loadedCards?.find((card) => card.id === daily.cardId) : null;
   const dailyDrawn: DrawnCard | null = daily && dailyCard
     ? { ...dailyCard, orientation: daily.orientation, revealed: daily.revealed }
     : null;
   const favoriteSpreads = spreads.filter((spread) => favorites.includes(spread.id));
-  const filteredSpreads = spreads.filter((spread) => spreadFilter === "全部" || spread.category === spreadFilter);
+  const filteredSpreads = spreads.filter((spread) => spreadFilter === "all" || spread.category === spreadFilter);
+  const selectedSpreadCopy = localizeSpread(selectedSpread, locale);
+  const dailyCardCopy = dailyDrawn && tarotGame ? tarotGame.getCardCopy(dailyDrawn, locale) : null;
 
   return (
     <main className={`site view-${view}`}>
       <div className="sky" aria-hidden="true"><span className="shooting-star" /><span className="shooting-star second" /></div>
       <header className="nav-shell">
-        <button className="brand" onClick={() => setView("home")} aria-label="返回星月塔罗首页">
+        <button className="brand" onClick={() => setView("home")} aria-label={copy.brandHomeLabel}>
           <span className="brand-mark"><Icon name="moon" /></span>
-          <span><strong>星月塔罗</strong><small>RWS TAROT</small></span>
+          <span><strong>{copy.brandName}</strong><small>RWS TAROT</small></span>
         </button>
-        <nav aria-label="主导航">
-          <button className={view === "spreads" ? "active" : ""} onClick={() => setView("spreads")}>牌阵</button>
-          <button className={view === "daily" ? "active" : ""} onClick={() => setView("daily")}>每日一牌</button>
-          <button className={view === "favorites" ? "active" : ""} onClick={() => setView("favorites")}>收藏</button>
+        <nav aria-label={copy.mainNavigation}>
+          <button className={view === "spreads" ? "active" : ""} onClick={() => setView("spreads")}>{copy.navSpreads}</button>
+          <button className={view === "daily" ? "active" : ""} onClick={() => void openDaily()}>{copy.navDaily}</button>
+          <button className={view === "favorites" ? "active" : ""} onClick={() => setView("favorites")}>{copy.navFavorites}</button>
         </nav>
         <div className="sound-controls">
-          <button className={ambientOn ? "is-on" : ""} onClick={toggleAmbient} title="环境氛围音" aria-label={ambientOn ? "关闭环境氛围音" : "开启环境氛围音"}><Icon name={ambientOn ? "volume" : "mute"} /><span>氛围</span></button>
-          <button className={sfxOn ? "is-on" : ""} onClick={toggleSfx} title="交互音效" aria-label={sfxOn ? "关闭交互音效" : "开启交互音效"}><Icon name={sfxOn ? "volume" : "mute"} /><span>音效</span></button>
+          <button className={ambientOn ? "is-on" : ""} onClick={toggleAmbient} title={copy.ambientTitle} aria-label={ambientOn ? copy.ambientDisable : copy.ambientEnable}><Icon name={ambientOn ? "volume" : "mute"} /><span>{copy.ambient}</span></button>
+          <button className={sfxOn ? "is-on" : ""} onClick={toggleSfx} title={copy.soundEffectsTitle} aria-label={sfxOn ? copy.soundEffectsDisable : copy.soundEffectsEnable}><Icon name={sfxOn ? "volume" : "mute"} /><span>{copy.soundEffects}</span></button>
+          <button className="language-switch" onClick={toggleLanguage} title={copy.languageLabel} aria-label={copy.languageLabel}><span>{copy.languageButton}</span></button>
         </div>
       </header>
 
       {view === "home" && (
         <section className="home-screen screen-enter">
           <div className="hero-copy">
-            <p className="eyebrow"><span /> A MOMENT WITH YOURSELF <span /></p>
-            <h1>向星月借一面<br /><em>照见内心</em>的镜子</h1>
-            <p className="hero-lead">不是仓促地得到一个答案。先放慢呼吸，亲手洗牌、选牌、逐张翻开，再让牌面陪你看见问题的不同侧面。</p>
+            <p className="eyebrow"><span /> {copy.heroEyebrow} <span /></p>
+            <h1>{copy.heroTitleLead}<br /><em>{copy.heroTitleEmphasis}</em>{copy.heroTitleTail}</h1>
+            <p className="hero-lead">{copy.heroLead}</p>
             <div className="hero-actions">
-              <button className="button primary large" onClick={() => setView("spreads")}>开始一次占卜 <Icon name="arrow" /></button>
-              <button className="button text-button" onClick={() => setView("daily")}><Icon name="spark" /> 抽取今日指引</button>
+              <button className="button primary large" onClick={() => setView("spreads")}>{copy.beginReading} <Icon name="arrow" /></button>
+              <button className="button text-button" onClick={() => void openDaily()}><Icon name="spark" /> {copy.drawDailyGuide}</button>
             </div>
             <div className="trust-row">
-              <span><b>78</b> 张完整 RWS 牌</span><i /><span><b>9</b> 种沉浸式牌阵</span><i /><span><b>双层</b> 本地 + AI 解读</span>
+              <span><b>78</b> {copy.completeDeck}</span><i /><span><b>9</b> {copy.immersiveSpreads}</span><i /><span><b>{locale === "en" ? "2 layers" : "双层"}</b> {copy.layeredReading}</span>
             </div>
           </div>
           <div className="hero-orbit" aria-hidden="true">
@@ -348,8 +426,8 @@ export function TarotExperience() {
             <span className="orbit-symbol symbol-one">☉</span><span className="orbit-symbol symbol-two">✧</span><span className="orbit-symbol symbol-three">☽</span>
           </div>
           <div className="ritual-line">
-            {[["01", "选择牌阵"], ["02", "默念问题"], ["03", "亲手选牌"], ["04", "观察与解读"]].map(([number, label]) => (
-              <div key={number}><span>{number}</span><p>{label}</p></div>
+            {copy.ritualSteps.map((label, index) => (
+              <div key={label}><span>{String(index + 1).padStart(2, "0")}</span><p>{label}</p></div>
             ))}
           </div>
         </section>
@@ -357,37 +435,37 @@ export function TarotExperience() {
 
       {view === "spreads" && (
         <section className="content-screen screen-enter">
-          <div className="section-heading"><p className="eyebrow">CHOOSE YOUR SPREAD</p><h2>此刻，你想看见什么？</h2><p>牌阵不是答案的模具，而是帮助你从不同角度安放问题。</p></div>
-          <div className="filter-row" role="group" aria-label="筛选牌阵">
-            {["全部", "通用", "感情", "事业", "抉择"].map((filter) => <button key={filter} className={spreadFilter === filter ? "active" : ""} onClick={() => setSpreadFilter(filter)}>{filter}</button>)}
+          <div className="section-heading"><p className="eyebrow">{copy.spreadsEyebrow}</p><h2>{copy.spreadsTitle}</h2><p>{copy.spreadsLead}</p></div>
+          <div className="filter-row" role="group" aria-label={copy.spreadFilterLabel}>
+            {(["all", "general", "love", "career", "choice"] as SpreadFilter[]).map((filter) => <button key={filter} className={spreadFilter === filter ? "active" : ""} onClick={() => setSpreadFilter(filter)}>{copy.filters[filter]}</button>)}
           </div>
-          <SpreadGrid spreads={filteredSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} />
-          <p className="ethical-note"><Icon name="moon" /> 塔罗用于娱乐、自我观察与启发；它不会替你读取他人内心，也不会替你作重大决定。</p>
+          <SpreadGrid spreads={filteredSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} />
+          <p className="ethical-note"><Icon name="moon" /> {copy.ethicalNote}</p>
         </section>
       )}
 
       {view === "favorites" && (
         <section className="content-screen favorites-screen screen-enter">
-          <div className="section-heading"><p className="eyebrow">YOUR COLLECTION</p><h2>收藏的牌阵</h2><p>把常用的观察方式留在手边，下次更快进入仪式。</p></div>
-          {favoriteSpreads.length ? <SpreadGrid spreads={favoriteSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} /> : <div className="empty-state"><span>☾</span><h3>收藏夹还是空的</h3><p>在牌阵右上角点亮心形，就能把它留在这里。</p><button className="button secondary" onClick={() => setView("spreads")}>去看看牌阵</button></div>}
+          <div className="section-heading"><p className="eyebrow">{copy.favoritesEyebrow}</p><h2>{copy.favoritesTitle}</h2><p>{copy.favoritesLead}</p></div>
+          {favoriteSpreads.length ? <SpreadGrid spreads={favoriteSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} /> : <div className="empty-state"><span>☾</span><h3>{copy.favoritesEmptyTitle}</h3><p>{copy.favoritesEmptyLead}</p><button className="button secondary" onClick={() => setView("spreads")}>{copy.browseSpreads}</button></div>}
         </section>
       )}
 
       {view === "question" && (
         <section className="question-screen screen-enter">
-          <div className="question-ritual" aria-hidden="true"><span>☾</span><i /><small>让问题先沉静下来</small></div>
+          <div className="question-ritual" aria-hidden="true"><span>☾</span><i /><small>{copy.settleQuestion}</small></div>
           <div className="question-card panel-card">
-            <button className="back-link" onClick={() => setView("spreads")}>← 重新选择牌阵</button>
-            <div className="chosen-spread"><div><small>{selectedSpread.eyebrow}</small><h2>{selectedSpread.name}</h2><p>{selectedSpread.description}</p></div><span>{selectedSpread.positions.length}<small>张牌</small></span></div>
-            <form onSubmit={(event) => { event.preventDefault(); enterTable(); }}>
-              <label className="field"><span>你想问的问题 <small>可以留空，让牌面自由呈现</small></span><textarea maxLength={300} value={question.question} onChange={(event) => setQuestion({ ...question, question: event.target.value })} placeholder="例如：未来三个月，我在工作中最值得关注的方向是什么？" /><b>{question.question.length}/300</b></label>
+            <button className="back-link" onClick={() => setView("spreads")}>{copy.chooseAnotherSpread}</button>
+            <div className="chosen-spread"><div><small>{selectedSpreadCopy.eyebrow}</small><h2>{selectedSpreadCopy.name}</h2><p>{selectedSpreadCopy.description}</p></div><span>{selectedSpreadCopy.positions.length}<small>{copy.cardsUnit(selectedSpreadCopy.positions.length).replace(/^\d+\s*/, "")}</small></span></div>
+            <form onSubmit={(event) => { event.preventDefault(); void enterTable(); }}>
+              <label className="field"><span>{copy.questionLabel} <small>{copy.questionOptional}</small></span><textarea maxLength={300} value={question.question} onChange={(event) => setQuestion({ ...question, question: event.target.value })} placeholder={copy.questionPlaceholder} /><b>{question.question.length}/300</b></label>
               <div className="two-fields">
-                <label className="field"><span>补充背景 <small>选填</small></span><input maxLength={800} value={question.context} onChange={(event) => setQuestion({ ...question, context: event.target.value })} placeholder="只写与问题有关的事实" /></label>
-                <label className="field"><span>时间范围 <small>选填</small></span><input maxLength={100} value={question.timeframe} onChange={(event) => setQuestion({ ...question, timeframe: event.target.value })} placeholder="如：未来三个月" /></label>
+                <label className="field"><span>{copy.contextLabel} <small>{copy.optional}</small></span><input maxLength={800} value={question.context} onChange={(event) => setQuestion({ ...question, context: event.target.value })} placeholder={copy.contextPlaceholder} /></label>
+                <label className="field"><span>{copy.timeframeLabel} <small>{copy.optional}</small></span><input maxLength={100} value={question.timeframe} onChange={(event) => setQuestion({ ...question, timeframe: event.target.value })} placeholder={copy.timeframePlaceholder} /></label>
               </div>
-              {selectedSpread.needsOptions && <div className="choice-fields"><label className="field"><span>选项 A</span><input required maxLength={100} value={question.optionA} onChange={(event) => setQuestion({ ...question, optionA: event.target.value })} placeholder="第一条道路" /></label><span className="versus">或</span><label className="field"><span>选项 B</span><input required maxLength={100} value={question.optionB} onChange={(event) => setQuestion({ ...question, optionB: event.target.value })} placeholder="第二条道路" /></label></div>}
-              <div className="position-preview"><small>牌位顺序</small><div>{selectedSpread.positions.map((position, index) => <span key={position}><b>{index + 1}</b>{position}</span>)}</div></div>
-              <button className="button primary full" type="submit">进入塔罗牌桌 <Icon name="arrow" /></button>
+              {selectedSpread.needsOptions && <div className="choice-fields"><label className="field"><span>{copy.optionA}</span><input required maxLength={100} value={question.optionA} onChange={(event) => setQuestion({ ...question, optionA: event.target.value })} placeholder={copy.firstPath} /></label><span className="versus">{copy.or}</span><label className="field"><span>{copy.optionB}</span><input required maxLength={100} value={question.optionB} onChange={(event) => setQuestion({ ...question, optionB: event.target.value })} placeholder={copy.secondPath} /></label></div>}
+              <div className="position-preview"><small>{copy.positionOrder}</small><div>{selectedSpreadCopy.positions.map((position, index) => <span key={position}><b>{index + 1}</b>{position}</span>)}</div></div>
+              <button className="button primary full" type="submit">{copy.enterTable} <Icon name="arrow" /></button>
             </form>
           </div>
         </section>
@@ -395,54 +473,64 @@ export function TarotExperience() {
 
       {view === "table" && (
         <section className="table-screen screen-enter">
-          <div className="table-heading"><button className="back-link" onClick={() => !shuffling && setView("question")}>← 返回问题</button><div><small>{selectedSpread.name}</small><h2>请凭直觉选择卡牌</h2></div><span className="pick-count"><b>{picked.length}</b> / {selectedSpread.positions.length}</span></div>
+          <div className="table-heading"><button className="back-link" onClick={() => !shuffling && setView("question")}>{copy.backToQuestion}</button><div><small>{selectedSpreadCopy.name}</small><h2>{copy.chooseCards}</h2></div><span className="pick-count"><b>{picked.length}</b> / {selectedSpreadCopy.positions.length}</span></div>
           <div className={`tarot-table shuffle-${shufflePhase}`}>
             <div className="table-rings" aria-hidden="true"><span>☾</span><i /><b>✦</b></div>
-            {deck.map((card, index) => <button key={card.id} type="button" className={`table-card tarot-back ${card.selected ? "is-picked" : ""}`} style={{ left: `${card.x}%`, top: `${card.y}%`, "--rotation": `${card.rotate}deg`, "--order": index } as React.CSSProperties} onClick={() => selectCard(card)} disabled={shuffling || card.selected || picked.length >= selectedSpread.positions.length} aria-label={`选择第 ${picked.length + 1} 张牌`}><span className="tarot-back-art">✦</span></button>)}
+            {deck.map((card, index) => <button key={card.id} type="button" className={`table-card tarot-back ${card.selected ? "is-picked" : ""}`} style={{ left: `${card.x}%`, top: `${card.y}%`, "--rotation": `${card.rotate}deg`, "--order": index } as React.CSSProperties} onClick={() => selectCard(card)} disabled={shuffling || card.selected || picked.length >= selectedSpreadCopy.positions.length} aria-label={copy.chooseCardAria(picked.length + 1)}><span className="tarot-back-art">✦</span></button>)}
             <div className="table-decor candle candle-left" aria-hidden="true"><i /><span /></div><div className="table-decor candle candle-right" aria-hidden="true"><i /><span /></div><div className="crystals" aria-hidden="true"><span /><span /><span /></div>
           </div>
           <div className="table-dock">
-            <div className="next-position" aria-live="polite"><small>{picked.length < selectedSpread.positions.length ? "下一张牌位" : "选择完成"}</small><strong>{picked.length < selectedSpread.positions.length ? selectedSpread.positions[picked.length] : "牌已齐，请确认"}</strong></div>
-            <div className="picked-tray" aria-label="已经选择的牌">{selectedSpread.positions.map((position, index) => <span key={position} className={index < picked.length ? "filled" : ""}><i>{index + 1}</i><small>{position}</small></span>)}</div>
-            <div className="table-actions"><button className="button ghost" onClick={shuffleCards} disabled={shuffling}>⌁ {shuffling ? "洗牌中" : "重新洗牌"}</button><button className="button ghost" onClick={undoPick} disabled={!picked.length || shuffling}>↶ 撤回</button><button className="button primary" onClick={finishPick} disabled={picked.length !== selectedSpread.positions.length || shuffling}>完成选牌</button></div>
+            <div className="next-position" aria-live="polite"><small>{picked.length < selectedSpreadCopy.positions.length ? copy.nextPosition : copy.selectionComplete}</small><strong>{picked.length < selectedSpreadCopy.positions.length ? selectedSpreadCopy.positions[picked.length] : copy.cardsReady}</strong></div>
+            <div className="picked-tray" aria-label={copy.selectedCardsAria}>{selectedSpreadCopy.positions.map((position, index) => <span key={position} className={index < picked.length ? "filled" : ""}><i>{index + 1}</i><small>{position}</small></span>)}</div>
+            <div className="table-actions"><button className="button ghost" onClick={shuffleCards} disabled={shuffling}>⌁ {shuffling ? copy.shuffling : copy.reshuffle}</button><button className="button ghost" onClick={undoPick} disabled={!picked.length || shuffling}>↶ {copy.undo}</button><button className="button primary" onClick={finishPick} disabled={picked.length !== selectedSpreadCopy.positions.length || shuffling}>{copy.finishSelection}</button></div>
           </div>
         </section>
       )}
 
       {view === "reveal" && (
         <section className="reveal-screen screen-enter">
-          <div className="reveal-heading"><p className="eyebrow">THE CARDS HAVE ARRIVED</p><h2>{selectedSpread.name}</h2><p aria-live="polite">{allRevealed ? "所有牌已经展开。先看看它们带给你的第一感受。" : `请翻开第 ${revealCursor + 1} 张：${selectedSpread.positions[revealCursor]}`}</p></div>
+          <div className="reveal-heading"><p className="eyebrow">{copy.cardsArrived}</p><h2>{selectedSpreadCopy.name}</h2><p aria-live="polite">{allRevealed ? copy.allRevealed : copy.revealPrompt(revealCursor + 1, selectedSpreadCopy.positions[revealCursor])}</p></div>
           <div className={`spread-board layout-${selectedSpread.id}`} data-count={picked.length}>
-            {picked.map((card, index) => <div className={`reveal-slot slot-${index + 1}`} key={card.id}><p><b>{index + 1}</b>{selectedSpread.positions[index]}</p><button className={`reveal-card ${card.revealed ? "revealed" : ""} ${card.orientation === "reversed" ? "reversed" : ""} ${index === revealCursor ? "next" : ""}`} onClick={() => revealCard(index)} disabled={index !== revealCursor || card.revealed} aria-label={card.revealed ? `${card.nameZh}，${orientationLabel(card.orientation)}` : `翻开${selectedSpread.positions[index]}`}><span className="reveal-inner"><span className="reveal-back tarot-back"><i className="tarot-back-art">✦</i></span><span className="reveal-front"><Image src={card.image} alt={`${card.nameZh} ${card.nameEn}`} fill sizes="(max-width: 600px) 30vw, 150px" priority={index < 4} /></span></span></button><div className="card-caption">{card.revealed ? <><strong>{card.nameZh}</strong><span>{card.nameEn} · {orientationLabel(card.orientation)}</span></> : <span>等待翻牌</span>}</div></div>)}
+            {picked.map((card, index) => <div className={`reveal-slot slot-${index + 1}`} key={card.id}><p><b>{index + 1}</b>{selectedSpreadCopy.positions[index]}</p><button className={`reveal-card ${card.revealed ? "revealed" : ""} ${card.orientation === "reversed" ? "reversed" : ""} ${index === revealCursor ? "next" : ""}`} onClick={() => revealCard(index)} disabled={index !== revealCursor || card.revealed} aria-label={card.revealed ? `${tarotGame!.getCardCopy(card, locale).name}, ${tarotGame!.orientationLabel(card.orientation, locale)}` : copy.revealAria(selectedSpreadCopy.positions[index])}><span className="reveal-inner"><span className="reveal-back tarot-back"><i className="tarot-back-art">✦</i></span><span className="reveal-front"><Image src={card.image} alt={tarotGame!.getCardCopy(card, locale).name} fill sizes="(max-width: 600px) 30vw, 150px" priority={index < 4} /></span></span></button><div className="card-caption">{card.revealed ? <><strong>{tarotGame!.getCardCopy(card, locale).name}</strong><span>{locale === "zh-CN" ? `${card.nameEn} · ` : ""}{tarotGame!.orientationLabel(card.orientation, locale)}</span></> : <span>{copy.waitingReveal}</span>}</div></div>)}
           </div>
-          <div className="reveal-actions">{!allRevealed ? <button className="button primary" onClick={() => revealCard(revealCursor)}>翻开这一张 <Icon name="spark" /></button> : <><button className="button secondary" onClick={() => { setReadingTab("local"); setReadingOpen(true); }}>查看本地牌义</button><button className="button primary" onClick={requestAiReading}>AI 综合解读 <Icon name="spark" /></button><button className="button ghost" onClick={() => showNotice("已保留牌面，你可以慢慢观察")}>暂不解读</button><button className="button ghost" onClick={() => void handleShare(picked, selectedSpread)}><Icon name="share" /> 生成分享图</button></>}</div>
-          <button className="restart-link" onClick={() => { resetReadingState(true); setView("table"); }}>重新选择这组牌</button>
+          <div className="reveal-actions">{!allRevealed ? <button className="button primary" onClick={() => revealCard(revealCursor)}>{copy.revealThisCard} <Icon name="spark" /></button> : <><button className="button secondary" onClick={() => { setReadingTab("local"); setReadingOpen(true); }}>{copy.viewLocalMeaning}</button><button className="button primary" onClick={requestAiReading}>{copy.aiReading} <Icon name="spark" /></button><button className="button ghost" onClick={() => showNotice(copy.cardsKept)}>{copy.keepCards}</button><button className="button ghost" onClick={() => void handleShare(picked, selectedSpread)}><Icon name="share" /> {copy.generateShare}</button></>}</div>
+          <button className="restart-link" onClick={() => { resetReadingState(true); setView("table"); }}>{copy.chooseAgain}</button>
         </section>
       )}
 
       {view === "daily" && (
         <section className="daily-screen content-screen screen-enter">
-          <div className="section-heading"><p className="eyebrow">A CARD FOR TODAY</p><h2>今日，与你相遇的牌</h2><p>{todayKey()} · 一天只抽一次。它是观察的起点，不是今天的判决。</p></div>
+          <div className="section-heading"><p className="eyebrow">{copy.dailyEyebrow}</p><h2>{copy.dailyTitle}</h2><p>{displayDate(locale)} · {copy.dailyLimitNote}</p></div>
           <div className="daily-stage">
             <div className="daily-moon" aria-hidden="true">☾</div>
-            {!dailyDrawn ? <button className="daily-card tarot-back" onClick={drawDaily} aria-label="抽取今日一牌"><span className="tarot-back-art">✦</span></button> : <button className={`daily-card reveal-card ${dailyDrawn.revealed ? "revealed" : ""} ${dailyDrawn.orientation === "reversed" ? "reversed" : ""}`} onClick={revealDaily} disabled={dailyDrawn.revealed} aria-label={dailyDrawn.revealed ? `${dailyDrawn.nameZh} ${orientationLabel(dailyDrawn.orientation)}` : "翻开今日一牌"}><span className="reveal-inner"><span className="reveal-back tarot-back"><i className="tarot-back-art">✦</i></span><span className="reveal-front"><Image src={dailyDrawn.image} alt={dailyDrawn.nameZh} fill sizes="230px" priority /></span></span></button>}
-            {!dailyDrawn ? <><h3>把手放在牌背上</h3><p>停一秒，想想今天你希望带着怎样的状态生活。</p><button className="button primary" onClick={drawDaily}>抽取今日指引</button></> : !dailyDrawn.revealed ? <><h3>这张牌已经选定</h3><p>准备好时，亲手把它翻开。</p><button className="button primary" onClick={revealDaily}>翻开卡牌</button></> : <div className="daily-reading"><small>今日指引 · {orientationLabel(dailyDrawn.orientation)}</small><h3>{dailyDrawn.nameZh}<em>{dailyDrawn.nameEn}</em></h3><p>{dailyDrawn.orientation === "reversed" ? dailyDrawn.reversed : dailyDrawn.upright}</p><p className="daily-advice"><b>可以带走的提醒</b>{dailyDrawn.advice}</p><button className="button ghost" onClick={() => void handleShare([dailyDrawn], DAILY_SPREAD)}><Icon name="share" /> 生成今日牌分享图</button></div>}
+            {!dailyDrawn ? <button className="daily-card tarot-back" onClick={() => void drawDaily()} aria-label={copy.drawDailyAria}><span className="tarot-back-art">✦</span></button> : <button className={`daily-card reveal-card ${dailyDrawn.revealed ? "revealed" : ""} ${dailyDrawn.orientation === "reversed" ? "reversed" : ""}`} onClick={revealDaily} disabled={dailyDrawn.revealed} aria-label={dailyDrawn.revealed ? `${dailyCardCopy?.name} ${tarotGame?.orientationLabel(dailyDrawn.orientation, locale) ?? ""}` : copy.revealDailyAria}><span className="reveal-inner"><span className="reveal-back tarot-back"><i className="tarot-back-art">✦</i></span><span className="reveal-front"><Image src={dailyDrawn.image} alt={dailyCardCopy?.name || ""} fill sizes="230px" priority /></span></span></button>}
+            {!dailyDrawn ? <><h3>{copy.dailyTouchTitle}</h3><p>{copy.dailyTouchLead}</p><button className="button primary" onClick={() => void drawDaily()}>{copy.drawDailyGuide}</button></> : !dailyDrawn.revealed ? <><h3>{copy.dailyChosenTitle}</h3><p>{copy.dailyChosenLead}</p><button className="button primary" onClick={revealDaily}>{copy.revealCard}</button></> : <div className="daily-reading"><small>{copy.dailyGuide} · {tarotGame?.orientationLabel(dailyDrawn.orientation, locale)}</small><h3>{dailyCardCopy?.name}{locale === "zh-CN" && <em>{dailyDrawn.nameEn}</em>}</h3><p>{dailyDrawn.orientation === "reversed" ? dailyCardCopy?.reversed : dailyCardCopy?.upright}</p><p className="daily-advice"><b>{copy.takeaway}</b>{dailyCardCopy?.advice}</p><button className="button ghost" onClick={() => void handleShare([dailyDrawn], DAILY_SPREAD)}><Icon name="share" /> {copy.generateDailyShare}</button></div>}
           </div>
         </section>
       )}
 
-      {readingOpen && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onClose={() => setReadingOpen(false)} />}
+      {readingOpen && tarotGame && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onClose={() => setReadingOpen(false)} locale={locale} tarotGame={tarotGame} />}
       {notice && <div className={`toast ${notice.tone === "error" ? "error" : ""}`} role="status">{notice.text}</div>}
-      {view !== "table" && <footer><span>☾</span><p>星月塔罗 · RWS 辅助观察工具</p><small>内容仅供娱乐、自我观察与启发，不构成医疗、法律或财务建议。牌面素材 <a href="https://github.com/searge/tarot" target="_blank" rel="noreferrer">searge/tarot</a> · CC BY-SA 4.0</small></footer>}
+      {view !== "table" && <footer><span>☾</span><p>{copy.footerName}</p><small>{copy.footerDisclaimer} {copy.cardArtwork} <a href="https://github.com/searge/tarot" target="_blank" rel="noreferrer">searge/tarot</a> · CC BY-SA 4.0</small></footer>}
     </main>
   );
 }
 
-function SpreadGrid({ spreads: items, favorites, onChoose, onFavorite }: { spreads: Spread[]; favorites: string[]; onChoose: (spread: Spread) => void; onFavorite: (id: string) => void }) {
-  return <div className="spread-grid">{items.map((spread, index) => <article className="spread-card" key={spread.id} style={{ "--delay": `${index * 55}ms` } as React.CSSProperties}><button className={`favorite-button ${favorites.includes(spread.id) ? "active" : ""}`} onClick={() => onFavorite(spread.id)} aria-label={favorites.includes(spread.id) ? `取消收藏${spread.name}` : `收藏${spread.name}`}><Icon name="heart" /></button><button className="spread-main" onClick={() => onChoose(spread)}><div className="spread-glyph" data-count={spread.positions.length}>{Array.from({ length: Math.min(spread.positions.length, 8) }).map((_, cardIndex) => <i key={cardIndex} />)}</div><small>{spread.eyebrow}</small><h3>{spread.name}</h3><p>{spread.description}</p><div className="spread-meta"><span>{spread.positions.length} 张牌</span><b>{spread.category}</b></div><span className="spread-enter">选择此牌阵 <Icon name="arrow" /></span></button></article>)}</div>;
+function SpreadGrid({ spreads: items, favorites, onChoose, onFavorite, locale }: { spreads: Spread[]; favorites: string[]; onChoose: (spread: Spread) => void; onFavorite: (id: string) => void; locale: Locale }) {
+  const copy = appMessages[locale];
+  return <div className="spread-grid">{items.map((spread, index) => {
+    const displaySpread = localizeSpread(spread, locale);
+    const favorite = favorites.includes(spread.id);
+    return <article className="spread-card" key={spread.id} style={{ "--delay": `${index * 55}ms` } as React.CSSProperties}><button className={`favorite-button ${favorite ? "active" : ""}`} onClick={() => onFavorite(spread.id)} aria-label={favorite ? copy.unfavoriteAria(displaySpread.name) : copy.favoriteAria(displaySpread.name)}><Icon name="heart" /></button><button className="spread-main" onClick={() => onChoose(spread)}><div className="spread-glyph" data-count={displaySpread.positions.length}>{Array.from({ length: Math.min(displaySpread.positions.length, 8) }).map((_, cardIndex) => <i key={cardIndex} />)}</div><small>{displaySpread.eyebrow}</small><h3>{displaySpread.name}</h3><p>{displaySpread.description}</p><div className="spread-meta"><span>{copy.cardsUnit(displaySpread.positions.length)}</span><b>{displaySpread.category}</b></div><span className="spread-enter">{copy.chooseSpread} <Icon name="arrow" /></span></button></article>;
+  })}</div>;
 }
 
-function ReadingDialog({ cards, spread, question, tab, setTab, aiReading, aiLoading, aiError, onAi, onClose }: { cards: DrawnCard[]; spread: Spread; question: string; tab: "local" | "ai"; setTab: (tab: "local" | "ai") => void; aiReading: string; aiLoading: boolean; aiError: string; onAi: () => void; onClose: () => void }) {
-  const synthesis = useMemo(() => buildLocalSynthesis(cards), [cards]);
-  return <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="reading-dialog" role="dialog" aria-modal="true" aria-labelledby="reading-title"><header><div><small>{spread.name}</small><h2 id="reading-title">辅助解读</h2></div><button onClick={onClose} autoFocus aria-label="关闭解读">×</button></header><div className="reading-tabs" role="tablist"><button role="tab" aria-selected={tab === "local"} className={tab === "local" ? "active" : ""} onClick={() => setTab("local")}>本地牌义</button><button role="tab" aria-selected={tab === "ai"} className={tab === "ai" ? "active" : ""} onClick={() => setTab("ai")}>AI 综合分析</button></div><div className="reading-body">{tab === "local" ? <><div className="reading-intro"><span>☾</span><p>{question ? <>围绕“{question}”，先逐张看牌，再观察它们之间的呼应。</> : <>你没有限定问题，可以把注意力放在牌面此刻最触动你的部分。</>}</p></div>{cards.map((card, index) => <article className="local-card-reading" key={card.id}><Image src={card.image} alt="" width={76} height={114} className={card.orientation === "reversed" ? "image-reversed" : ""} /><div><small>{spread.positions[index]}</small><h3>{card.nameZh} <em>{card.nameEn}</em><span>{orientationLabel(card.orientation)}</span></h3><p>{localMeaningFor(card, question)}</p></div></article>)}<section className="local-synthesis"><h3>这组牌连起来看</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><button className="button primary full" onClick={onAi}>继续请求 AI 综合解读</button></> : <div className="ai-reading">{aiLoading ? <div className="oracle-loading"><div className="loading-orbit"><span>☾</span></div><h3>正在梳理牌与问题的联系</h3><p>逐张读牌、检查组合，再把它们带回你的现实处境……</p></div> : aiError ? <div className="ai-error"><span>☁</span><h3>这一次，星光没有顺利抵达</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>稍后再试</button><button className="button text-button" onClick={() => setTab("local")}>返回本地牌义</button></div> : aiReading ? <ReactMarkdown>{aiReading}</ReactMarkdown> : <div className="ai-ready"><span>✦</span><h3>让牌面与问题连成一条线</h3><p>AI 会按顺序逐张解释、分析组合，再给出有条件的回应和现实建议。每日可完成 3 次。</p><button className="button primary" onClick={onAi}>开始综合解读</button></div>}</div>}</div></section></div>;
+function ReadingDialog({ cards, spread, question, tab, setTab, aiReading, aiLoading, aiError, onAi, onClose, locale, tarotGame }: { cards: DrawnCard[]; spread: Spread; question: string; tab: "local" | "ai"; setTab: (tab: "local" | "ai") => void; aiReading: string; aiLoading: boolean; aiError: string; onAi: () => void; onClose: () => void; locale: Locale; tarotGame: TarotGame }) {
+  const copy = appMessages[locale];
+  const displaySpread = localizeSpread(spread, locale);
+  const synthesis = useMemo(() => tarotGame.buildLocalSynthesis(cards, locale), [cards, locale, tarotGame]);
+  return <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="reading-dialog" role="dialog" aria-modal="true" aria-labelledby="reading-title"><header><div><small>{displaySpread.name}</small><h2 id="reading-title">{copy.readingTitle}</h2></div><button onClick={onClose} autoFocus aria-label={copy.closeReading}>×</button></header><div className="reading-tabs" role="tablist"><button role="tab" aria-selected={tab === "local"} className={tab === "local" ? "active" : ""} onClick={() => setTab("local")}>{copy.localMeanings}</button><button role="tab" aria-selected={tab === "ai"} className={tab === "ai" ? "active" : ""} onClick={() => setTab("ai")}>{copy.aiAnalysis}</button></div><div className="reading-body">{tab === "local" ? <><div className="reading-intro"><span>☾</span><p>{question ? copy.questionReadingIntro(question) : copy.openReadingIntro}</p></div>{cards.map((card, index) => {
+    const displayCard = tarotGame.getCardCopy(card, locale);
+    return <article className="local-card-reading" key={card.id}><Image src={card.image} alt="" width={76} height={114} className={card.orientation === "reversed" ? "image-reversed" : ""} /><div><small>{displaySpread.positions[index]}</small><h3>{displayCard.name} {locale === "zh-CN" && <em>{card.nameEn}</em>}<span>{tarotGame.orientationLabel(card.orientation, locale)}</span></h3><p>{tarotGame.localMeaningFor(card, question, locale)}</p></div></article>;
+  })}<section className="local-synthesis"><h3>{copy.synthesisTitle}</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><button className="button primary full" onClick={onAi}>{copy.continueAi}</button></> : <div className="ai-reading">{aiLoading ? <div className="oracle-loading"><div className="loading-orbit"><span>☾</span></div><h3>{copy.aiLoadingTitle}</h3><p>{copy.aiLoadingLead}</p></div> : aiError ? <div className="ai-error"><span>☁</span><h3>{copy.aiErrorTitle}</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>{copy.tryAgain}</button><button className="button text-button" onClick={() => setTab("local")}>{copy.backToLocal}</button></div> : aiReading ? <ReactMarkdown>{aiReading}</ReactMarkdown> : <div className="ai-ready"><span>✦</span><h3>{copy.aiReadyTitle}</h3><p>{copy.aiReadyLead}</p><button className="button primary" onClick={onAi}>{copy.startAi}</button></div>}</div>}</div></section></div>;
 }
