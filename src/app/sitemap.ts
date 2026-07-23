@@ -9,5 +9,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
+    {
+      url: new URL("/blog", SITE_URL).href,
+      lastModified: new Date("2026-07-23"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
   ];
 }

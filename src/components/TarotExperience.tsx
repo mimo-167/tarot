@@ -396,6 +396,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
           <button className={view === "spreads" ? "active" : ""} onClick={() => setView("spreads")}>{copy.navSpreads}</button>
           <button className={view === "daily" ? "active" : ""} onClick={() => void openDaily()}>{copy.navDaily}</button>
           <button className={view === "favorites" ? "active" : ""} onClick={() => setView("favorites")}>{copy.navFavorites}</button>
+          <a href="/blog">Blog</a>
         </nav>
         <div className="sound-controls">
           <button className={ambientOn ? "is-on" : ""} onClick={toggleAmbient} title={copy.ambientTitle} aria-label={ambientOn ? copy.ambientDisable : copy.ambientEnable}><Icon name={ambientOn ? "volume" : "mute"} /><span>{copy.ambient}</span></button>
