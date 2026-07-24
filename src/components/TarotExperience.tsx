@@ -512,7 +512,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
 
       {readingOpen && tarotGame && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onClose={() => setReadingOpen(false)} locale={locale} tarotGame={tarotGame} />}
       {notice && <div className={`toast ${notice.tone === "error" ? "error" : ""}`} role="status">{notice.text}</div>}
-      {view !== "table" && <footer><span>☾</span><p>{copy.footerName}</p><small>{copy.footerDisclaimer} {copy.cardArtwork} <a href="https://github.com/searge/tarot" target="_blank" rel="noreferrer">searge/tarot</a> · CC BY-SA 4.0</small></footer>}
+      {view !== "table" && <footer><span>☾</span><p>{copy.footerName}</p><small>{copy.footerDisclaimer}</small></footer>}
     </main>
   );
 }
@@ -533,5 +533,18 @@ function ReadingDialog({ cards, spread, question, tab, setTab, aiReading, aiLoad
   return <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="reading-dialog" role="dialog" aria-modal="true" aria-labelledby="reading-title"><header><div><small>{displaySpread.name}</small><h2 id="reading-title">{copy.readingTitle}</h2></div><button onClick={onClose} autoFocus aria-label={copy.closeReading}>×</button></header><div className="reading-tabs" role="tablist"><button role="tab" aria-selected={tab === "local"} className={tab === "local" ? "active" : ""} onClick={() => setTab("local")}>{copy.localMeanings}</button><button role="tab" aria-selected={tab === "ai"} className={tab === "ai" ? "active" : ""} onClick={() => setTab("ai")}>{copy.aiAnalysis}</button></div><div className="reading-body">{tab === "local" ? <><div className="reading-intro"><span>☾</span><p>{question ? copy.questionReadingIntro(question) : copy.openReadingIntro}</p></div>{cards.map((card, index) => {
     const displayCard = tarotGame.getCardCopy(card, locale);
     return <article className="local-card-reading" key={card.id}><Image src={card.image} alt="" width={76} height={114} className={card.orientation === "reversed" ? "image-reversed" : ""} /><div><small>{displaySpread.positions[index]}</small><h3>{displayCard.name} {locale === "zh-CN" && <em>{card.nameEn}</em>}<span>{tarotGame.orientationLabel(card.orientation, locale)}</span></h3><p>{tarotGame.localMeaningFor(card, question, locale)}</p></div></article>;
-  })}<section className="local-synthesis"><h3>{copy.synthesisTitle}</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><button className="button primary full" onClick={onAi}>{copy.continueAi}</button></> : <div className="ai-reading">{aiLoading ? <div className="oracle-loading"><div className="loading-orbit"><span>☾</span></div><h3>{copy.aiLoadingTitle}</h3><p>{copy.aiLoadingLead}</p></div> : aiError ? <div className="ai-error"><span>☁</span><h3>{copy.aiErrorTitle}</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>{copy.tryAgain}</button><button className="button text-button" onClick={() => setTab("local")}>{copy.backToLocal}</button></div> : aiReading ? <ReactMarkdown>{aiReading}</ReactMarkdown> : <div className="ai-ready"><span>✦</span><h3>{copy.aiReadyTitle}</h3><p>{copy.aiReadyLead}</p><button className="button primary" onClick={onAi}>{copy.startAi}</button></div>}</div>}</div></section></div>;
+  })}<section className="local-synthesis"><h3>{copy.synthesisTitle}</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><button className="button primary full" onClick={onAi}>{copy.continueAi}</button></> : <div className="ai-reading">{aiLoading ? <AiLoadingState messages={copy.aiLoadingMessages} /> : aiError ? <div className="ai-error"><span>☁</span><h3>{copy.aiErrorTitle}</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>{copy.tryAgain}</button><button className="button text-button" onClick={() => setTab("local")}>{copy.backToLocal}</button></div> : aiReading ? <ReactMarkdown>{aiReading}</ReactMarkdown> : <div className="ai-ready"><span>✦</span><h3>{copy.aiReadyTitle}</h3><p>{copy.aiReadyLead}</p><button className="button primary" onClick={onAi}>{copy.startAi}</button></div>}</div>}</div></section></div>;
+}
+
+function AiLoadingState({ messages }: { messages: string[] }) {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMessageIndex((current) => (current + 1) % messages.length);
+    }, 2400);
+    return () => window.clearInterval(timer);
+  }, [messages.length]);
+
+  return <div className="oracle-loading"><div className="loading-orbit"><span>☾</span></div><h3>{messages[messageIndex]}</h3></div>;
 }
