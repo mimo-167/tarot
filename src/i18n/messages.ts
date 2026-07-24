@@ -101,9 +101,6 @@ export type AppMessages = {
   dailyGuide: string;
   takeaway: string;
   generateDailyShare: string;
-  footerName: string;
-  footerDisclaimer: string;
-  cardArtwork: string;
   favoriteAria: (name: string) => string;
   unfavoriteAria: (name: string) => string;
   chooseSpread: string;
@@ -225,9 +222,6 @@ const zhCN: AppMessages = {
   dailyGuide: "今日指引",
   takeaway: "可以带走的提醒",
   generateDailyShare: "生成今日牌分享图",
-  footerName: "每一张牌，都是一次与自己的对话。\nEvery card is a conversation with yourself.",
-  footerDisclaimer: "Tarot is for reflection and entertainment only.",
-  cardArtwork: "牌面素材",
   favoriteAria: (name) => `收藏${name}`,
   unfavoriteAria: (name) => `取消收藏${name}`,
   chooseSpread: "选择此牌阵",
@@ -354,9 +348,6 @@ const en: AppMessages = {
   dailyGuide: "Today's guidance",
   takeaway: "A reminder to carry with you",
   generateDailyShare: "Create today's share image",
-  footerName: "每一张牌，都是一次与自己的对话。\nEvery card is a conversation with yourself.",
-  footerDisclaimer: "Tarot is for reflection and entertainment only.",
-  cardArtwork: "Card artwork",
   favoriteAria: (name) => `Add ${name} to favorites`,
   unfavoriteAria: (name) => `Remove ${name} from favorites`,
   chooseSpread: "Choose this spread",

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { localizeSpread, spreads } from "@/data/spreads";
 import { appMessages } from "@/i18n/messages";
+import { SiteFooter } from "@/components/SiteFooter";
 import type { Locale } from "@/i18n/config";
 import type { AppView, DrawnCard, ReadingRequest, Spread, TarotCard } from "@/types/tarot";
 
@@ -512,7 +513,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
 
       {readingOpen && tarotGame && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onClose={() => setReadingOpen(false)} locale={locale} tarotGame={tarotGame} />}
       {notice && <div className={`toast ${notice.tone === "error" ? "error" : ""}`} role="status">{notice.text}</div>}
-      {view !== "table" && <footer><span>☾</span><p>{copy.footerName}</p><small>{copy.footerDisclaimer}</small></footer>}
+      {view !== "table" && <SiteFooter />}
     </main>
   );
 }

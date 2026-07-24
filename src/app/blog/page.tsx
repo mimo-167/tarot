@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/SiteFooter";
 import { getRequestLocale } from "@/i18n/server";
 import { SITE_NAME_EN, SITE_URL } from "@/lib/seo";
 
@@ -16,9 +17,6 @@ const copy = {
     emptyTitle: "文章还在路上",
     emptyLead: "你之后写好文章后，我可以把它们整理成列表、详情页和 SEO 数据。现在这个页面先作为公开入口保留。",
     coming: "Coming soon",
-    footerName: "星月塔罗 · RWS 辅助观察工具",
-    footerDisclaimer: "内容仅供娱乐、自我观察与启发，不构成医疗、法律或财务建议。",
-    cardArtwork: "牌面素材",
   },
   en: {
     title: "Moon & Stars Tarot Blog",
@@ -32,9 +30,6 @@ const copy = {
     emptyTitle: "Articles are coming soon",
     emptyLead: "When your articles are ready, I can turn them into a list, detail pages, and SEO metadata. For now, this page gives the blog a clean public home.",
     coming: "Coming soon",
-    footerName: "Moon & Stars Tarot · RWS reflection tool",
-    footerDisclaimer: "For entertainment, reflection, and inspiration only. This is not medical, legal, or financial advice.",
-    cardArtwork: "Card artwork",
   },
 };
 
@@ -96,7 +91,7 @@ export default async function BlogPage() {
         </section>
       </section>
 
-      <footer><span>☾</span><p>{pageCopy.footerName}</p><small>{pageCopy.footerDisclaimer} {pageCopy.cardArtwork} <a href="https://github.com/searge/tarot" target="_blank" rel="noreferrer">searge/tarot</a> · CC BY-SA 4.0</small></footer>
+      <SiteFooter />
     </main>
   );
 }
