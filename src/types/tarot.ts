@@ -67,6 +67,7 @@ export type AppView =
   | "home"
   | "spreads"
   | "question"
+  | "preparation"
   | "table"
   | "reveal"
   | "daily"

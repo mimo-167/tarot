@@ -73,7 +73,7 @@ export default async function BlogPage() {
           <Link href="/">{pageCopy.spreads}</Link>
           <Link className="active" href="/blog">Blog</Link>
         </nav>
-        <div className="sound-controls blog-nav-spacer" aria-hidden="true" />
+        <div className="header-controls blog-nav-spacer" aria-hidden="true" />
       </header>
 
       <section className="blog-screen screen-enter">

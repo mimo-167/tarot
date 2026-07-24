@@ -1,46 +1,139 @@
-# 星月塔罗
+# 星月塔罗（Xingyue Tarot）
 
-沉浸式 Rider–Waite–Smith 塔罗网页应用。项目由原始单文件 Demo 重构为 Next.js 16，并通过 OpenNext 部署到 Cloudflare Workers。
+沉浸式 Rider–Waite–Smith（韦特）塔罗网页应用，围绕“仪式感、自由抽牌、本地牌义与 AI 个性化辅助解读”设计。项目由原始单文件 Demo 重构为 Next.js，并通过 OpenNext 部署到 Cloudflare Workers。
 
-线上地址：<https://tarot.zxkpg.uk>
+> [!IMPORTANT]
+> 本文档是项目维护的必读入口。任何开发者或 AI 在修改代码、内容、配置或部署前，都必须先完整阅读本文档，并根据修改范围继续阅读下方列出的业务资料。若代码、Cloudflare 配置或部署方式发生变化，必须在同一次修改中同步更新本文档。
 
-## 已实现
+## 项目入口
 
-- 9 种产品牌阵，以及问题、背景、时间范围和二选一 A/B 输入。
-- 完整 78 张无重复牌组、随机牌序与正逆位、自由选牌、撤回、三阶段洗牌。
-- 按牌位顺序翻牌、逆位牌面、不同牌阵的几何布局。
-- 由项目知识库自动生成的 78 张结构化本地牌义与基础组合观察。
-- DeepSeek 服务端综合解读：输入校验、提示词注入隔离、安全边界、超时/错误降级。
-- 收藏牌阵、同日固定的每日一牌、Canvas 分享海报。
-- Web Audio 环境氛围音和操作音效，偏好本地保存。
-- 前端每日 3 次友好额度 + Cloudflare Rate Limiting binding 每分钟防刷。
-- 桌面与移动端响应式、键盘焦点、状态播报和 `prefers-reduced-motion`。
-- 完整中英双语：浏览器语言自动识别、页面内即时切换、偏好 Cookie 持久化，以及双语牌阵、本地牌义、AI 解读、错误提示和分享海报。
+| 项目 | 地址或名称 |
+| --- | --- |
+| GitHub 仓库 | <https://github.com/mimo-167/tarot> |
+| Git 远程 | `origin` → `https://github.com/mimo-167/tarot.git` |
+| 默认分支 | `master` |
+| 生产网站 | <https://tarot.zxkpg.uk/> |
+| Cloudflare Worker | `xingyue-tarot` |
+| 部署平台 | Cloudflare Workers（不是 Cloudflare Pages） |
+| 部署适配器 | OpenNext for Cloudflare |
+| 部署 CLI | Wrangler |
+| 包管理器 | npm（以 `package-lock.json` 为准） |
 
-## 技术结构
+本文档中的线上信息最后核对于 **2026-07-25**；当时生产域名响应正常。实际部署版本请使用 `npx wrangler deployments status --name xingyue-tarot` 或 `npx wrangler versions list --name xingyue-tarot` 查询，不要把易变化的版本 ID 写死在业务代码中。
 
-- `src/components/TarotExperience.tsx`：完整仪式与运营功能界面。
-- `src/data/spreads.ts`：牌阵定义。
-- `src/data/tarot-cards.json`：从 RWS 知识库生成的 78 张牌数据。
-- `src/data/tarot-cards.en.json`：与 78 张中文牌逐一对应的英文牌义。
-- `src/i18n/`：双语界面文案、浏览器语言解析与服务端首屏语言选择。
-- `src/app/api/reading/route.ts`：Cloudflare Worker 中运行的 DeepSeek 接口。
-- `src/middleware.ts`：自定义域名 HTTP 请求跳转到 HTTPS。
-- `src/lib/reading-prompt.ts`：服务端系统提示词与本次牌面上下文。
-- `scripts/generate-tarot-data.mjs`：知识库到结构化数据的可重复生成脚本。
-- `wrangler.jsonc` / `open-next.config.ts`：Cloudflare Workers 部署配置。
+## 修改前必读
+
+每次开始修改前：
+
+1. 完整阅读本 README。
+2. 运行 `git status --short`，识别并保留用户尚未提交的修改，不覆盖无关文件。
+3. 根据任务读取对应资料：
+
+| 修改范围 | 必须继续阅读 |
+| --- | --- |
+| 产品流程、页面功能、交互定位 | [`【项目定位】.txt`](./【项目定位】.txt) |
+| AI 解读行为、语气、安全边界 | [`docs/AI塔罗辅助解读系统提示词.md`](./docs/AI塔罗辅助解读系统提示词.md) |
+| 牌义、牌面内容、组合解释 | [`docs/RWS塔罗AI辅助解牌知识库.md`](./docs/RWS塔罗AI辅助解牌知识库.md) |
+| 牌面图片、版权或素材替换 | [`ATTRIBUTION.md`](./ATTRIBUTION.md) |
+| 部署、域名、绑定或环境变量 | [`wrangler.jsonc`](./wrangler.jsonc)、[`open-next.config.ts`](./open-next.config.ts)、[`.env.example`](./.env.example) |
+| 依赖、构建命令或运行环境 | [`package.json`](./package.json)、[`package-lock.json`](./package-lock.json) |
+
+资料与代码不一致时，不要静默猜测：先核对当前实现和产品目标，再同步更新代码及相关文档。`【项目定位】.txt` 中部分“未实现”项目已经在正式项目中完成，当前代码和本 README 的“已实现功能”是判断现状的主要依据。
+
+## 已实现功能
+
+- 9 种牌阵，以及问题、背景、时间范围和二选一 A/B 输入。
+- 抽牌前的沉浸式静心引导页、三阶段洗牌、78 张无重复牌组、自由选牌、撤回与重选。
+- 随机牌序和正逆位、按牌位逐张翻牌、不同牌阵的几何布局。
+- 完整中英双语：浏览器语言自动选择、`中文 / English` 手动切换和 Cookie 持久化。
+- 中英文牌阵、牌义、AI 解读、错误提示与分享图片。
+- 本地结构化牌义和 DeepSeek 服务端综合解读。
+- 收藏牌阵和同日固定的每日一牌。
+- Canvas 生成缩略分享图，用户预览后下载到本地；不依赖 Windows 系统共享面板。
+- 前端友好额度与 Cloudflare Rate Limiting binding 双层调用限制。
+- 响应式布局、键盘焦点、状态播报和 `prefers-reduced-motion`。
+- SEO 页面、站点地图、robots、Open Graph 图片和博客入口。
+
+## 技术栈
+
+- Next.js 16（App Router）
+- React 19
+- TypeScript
+- Vitest
+- OpenNext for Cloudflare
+- Cloudflare Workers + Wrangler
+- DeepSeek 的 OpenAI-compatible Chat Completions 接口
+- 原生 Canvas 与浏览器存储
+
+精确版本始终以 [`package.json`](./package.json) 和 [`package-lock.json`](./package-lock.json) 为准，不要仅依据本文档升级依赖。
+
+## 关键目录与文件
+
+```text
+src/
+├─ app/
+│  ├─ api/reading/route.ts       # AI 解读服务端接口
+│  ├─ blog/                      # SEO 内容页
+│  ├─ layout.tsx                 # 全局页面结构和元数据
+│  ├─ page.tsx                   # 首页入口
+│  ├─ sitemap.ts                 # 站点地图
+│  └─ globals.css                # 全局样式与响应式设计
+├─ components/
+│  ├─ TarotExperience.tsx        # 游戏主流程与主要界面
+│  └─ SiteFooter.tsx             # 全站页脚
+├─ data/
+│  ├─ spreads.ts                 # 牌阵定义
+│  ├─ tarot-cards.json           # 中文结构化牌义
+│  └─ tarot-cards.en.json        # 英文结构化牌义
+├─ i18n/                         # 语言识别、服务端语言和双语文案
+├─ lib/
+│  ├─ reading-prompt.ts          # AI 系统提示词与本次牌面上下文
+│  ├─ reading-validation.ts      # AI 请求校验
+│  ├─ share-poster.ts            # 分享图片生成
+│  └─ game.ts                    # 抽牌核心逻辑
+└─ types/tarot.ts                # 塔罗业务类型
+
+docs/                             # 产品知识、AI 提示词和内容资料
+public/                           # 卡牌图片与静态资源
+scripts/                          # 数据生成、构建清理和 UI 冒烟测试
+wrangler.jsonc                    # Worker、域名、静态资源和限流绑定
+open-next.config.ts               # OpenNext Cloudflare 适配配置
+next.config.ts                    # Next.js 配置
+```
+
+原始 Demo [`塔罗牌.html`](./塔罗牌.html) 仅作为设计和交互参考，不是当前生产入口。正式功能应修改 `src/` 下的 Next.js 实现。
 
 ## 本地开发
 
-需要 Node.js 22 或更新版本。
+### 环境要求
 
-```bash
+- Node.js 22 或更新版本
+- npm
+- 如需运行 UI 冒烟测试，需要本机安装 Chrome，或通过 `CHROME_PATH` 指定 Chromium/Chrome
+
+### 初始化
+
+```powershell
+git clone https://github.com/mimo-167/tarot.git
+cd tarot
 npm install
-npm run generate:data
+Copy-Item .env.example .env.local
 npm run dev
 ```
 
-创建 `.env.local`（不要提交）：
+访问 <http://localhost:3000>。
+
+只有当知识库内容或数据生成逻辑发生变化时，才需要运行：
+
+```bash
+npm run generate:data
+```
+
+生成后必须检查中文和英文 JSON 是否仍然一一对应，不要误覆盖人工修订的英文内容。
+
+## 环境变量与密钥
+
+本地开发使用 `.env.local`，示例见 [`.env.example`](./.env.example)：
 
 ```env
 DEEPSEEK_API_KEY=你的密钥
@@ -48,9 +141,57 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
 ```
 
-没有密钥时，所有前端功能和本地牌义仍可使用；AI 面板会明确提示尚未配置。
+规则：
 
-## 验证
+- `DEEPSEEK_API_KEY` 只能由服务端读取。
+- 不得使用 `NEXT_PUBLIC_` 前缀，否则密钥可能进入浏览器代码。
+- 不得把真实密钥写进 README、源码、Git 提交、日志或截图。
+- `.env.local`、`.dev.vars` 等本地密钥文件已被 `.gitignore` 忽略。
+- 没有密钥时，本地牌义和非 AI 功能仍可使用，AI 接口会返回未配置提示。
+- 如果密钥曾出现在聊天、工单或公开位置，应在服务商后台轮换，再更新本地和 Cloudflare Secret。
+
+生产环境使用 Cloudflare Secret，并通过交互式命令录入：
+
+```bash
+npx wrangler secret put DEEPSEEK_API_KEY --name xingyue-tarot
+```
+
+不要把密钥直接放在命令参数中。可用以下只读命令确认 Secret 名称是否存在，命令不会显示密钥值：
+
+```bash
+npx wrangler secret list --name xingyue-tarot
+```
+
+## 常用命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `npm run dev` | 启动 Next.js 本地开发服务器 |
+| `npm run lint` | ESLint 静态检查 |
+| `npm test` | 运行 Vitest 测试 |
+| `npm run build` | 构建标准 Next.js 产物 |
+| `npm run cf:build` | 构建 Cloudflare/OpenNext 产物 |
+| `npm run preview` | 构建并预览 Cloudflare 版本 |
+| `npm run smoke:ui` | 使用本机 Chrome 运行主流程冒烟测试 |
+| `npm run deploy` | 构建并部署到生产 Worker |
+| `npm run cf:typegen` | 根据 Wrangler 配置生成 Cloudflare 类型 |
+| `npm run generate:data` | 从知识库重新生成结构化牌义 |
+
+远程运行 UI 冒烟测试时可以指定：
+
+```powershell
+$env:SMOKE_BASE_URL = "https://tarot.zxkpg.uk"
+npm run smoke:ui
+```
+
+## 修改与验证流程
+
+推荐的完整流程：
+
+1. 阅读“修改前必读”并检查 `git status --short`。
+2. 只修改任务范围内的文件，保留现有未提交内容。
+3. 至少运行与改动相关的测试。
+4. 提交或部署前运行完整验证：
 
 ```bash
 npm run lint
@@ -59,23 +200,106 @@ npm run build
 npm run cf:build
 ```
 
-已提供 `npm run smoke:ui`，它使用本机 Chrome 自动走通：9 个牌阵 → 问题 → 78 张牌桌 → 选择三张 → 逐张翻牌 → 本地解读，同时检查移动端每日牌页。
+涉及主交互、语言切换、移动端、分享图片或抽牌流程时，再运行：
+
+```bash
+npm run smoke:ui
+```
+
+5. 检查 `git diff --check` 和 `git diff`，确认没有密钥、调试日志、构建产物或无关改动。
+6. 如果本次修改改变了架构、命令、环境变量、域名、部署配置或关键行为，同步更新 README。
 
 ## Cloudflare 部署
 
-当前 Worker 名为 `xingyue-tarot`。首次启用 AI 时，把密钥放入 Cloudflare Secret：
+生产部署链路：
+
+```text
+Next.js 源码
+  → @opennextjs/cloudflare 构建
+  → .open-next/worker.js 和静态资源
+  → Wrangler
+  → Cloudflare Worker: xingyue-tarot
+  → https://tarot.zxkpg.uk/
+```
+
+[`wrangler.jsonc`](./wrangler.jsonc) 是 Worker 配置的事实来源，当前包括：
+
+- Worker 名称：`xingyue-tarot`
+- 自定义域名：`tarot.zxkpg.uk`
+- Node.js 兼容标志：`nodejs_compat`
+- 静态资源绑定：`ASSETS`
+- AI 限流绑定：`AI_RATE_LIMITER`，当前为每个键每分钟 5 次
+- Workers Observability：已启用
+
+### 部署前
 
 ```bash
-npx wrangler secret put DEEPSEEK_API_KEY --name xingyue-tarot
+npx wrangler whoami
+npm run lint
+npm test
+npm run cf:build
+```
+
+`npm run deploy` 会直接修改生产环境，只有在确认要发布时执行：
+
+```bash
 npm run deploy
 ```
 
-密钥只在 Worker 运行时读取，不使用 `NEXT_PUBLIC_` 前缀，也不会进入浏览器包。生产接口还使用 `AI_RATE_LIMITER` binding 限制突发调用。
+部署脚本使用 `--keep-vars`，避免覆盖 Cloudflare Dashboard 中已有的变量，但仍应在部署后确认 Secret 和绑定存在。
+
+### 部署后
+
+```bash
+npx wrangler deployments status --name xingyue-tarot
+npx wrangler versions list --name xingyue-tarot
+```
+
+随后至少检查：
+
+- <https://tarot.zxkpg.uk/> 能正常打开且使用 HTTPS。
+- 中文和 English 切换正常，刷新后语言偏好仍保留。
+- 抽牌、翻牌、本地解读和 AI 解读正常。
+- 分享图可以预览并下载。
+- 手机端页面没有横向溢出或按钮遮挡。
+
+需要查看线上日志时：
+
+```bash
+npx wrangler tail xingyue-tarot
+```
+
+如新版本出现严重问题，先查询版本，再按确认过的目标版本回滚：
+
+```bash
+npx wrangler versions list --name xingyue-tarot
+npx wrangler rollback <VERSION_ID> --name xingyue-tarot
+```
+
+回滚会改变生产流量，执行前必须确认目标版本 ID。
+
+## Git 与发布约定
+
+- GitHub 仓库是代码协作和版本记录平台；Cloudflare Workers 是实际运行平台。
+- 不要提交 `.env.local`、`.dev.vars`、`.next/`、`.open-next/`、日志或测试产物。
+- 不要使用会丢失用户修改的命令，例如 `git reset --hard`。
+- 提交前检查 `git status`、`git diff` 和验证结果。
+- 推送代码到 GitHub 不等于部署生产；当前生产发布由 `npm run deploy` 完成。
+- 如果未来改为 GitHub Actions 自动部署，必须在此处记录工作流文件、触发分支和所需 Secrets。
+
+## 业务与安全边界
+
+- 产品用于娱乐、自我观察与启发，不宣称确定预测未来。
+- AI 不得制造恐惧，不替用户做医疗、法律、财务或其他重大决定。
+- AI 不应声称知道第三方的真实想法。
+- 用户问题属于敏感输入，不应写入持久日志或前端分析事件。
+- 修改提示词时必须同时检查提示注入隔离、输出边界和中英文行为。
+- 修改牌义时要保持 78 张牌、正逆位、牌名和中英文数据的映射稳定。
 
 ## 内容现状
 
-项目提供的知识库确实包含 78 张独立牌义，但每张正文目前约 207～278 个中文字符，并非产品定位中规划的每张 1000～2000 字长资料。本版完整使用了现有语料，不虚构缺失内容；后续扩写知识库后运行 `npm run generate:data` 即可更新前端与 AI 上下文。
+项目知识库包含 78 张独立牌义，但每张正文目前约为 207～278 个中文字符，尚未达到产品定位中规划的每张 1000～2000 字长资料。当前版本完整使用现有语料，不应虚构缺失内容。后续扩写知识库后，可运行 `npm run generate:data` 更新前端牌义与 AI 上下文。
 
 ## 素材许可
 
-牌面素材来源和许可见 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+牌面素材来源和许可见 [`ATTRIBUTION.md`](./ATTRIBUTION.md)。新增或替换素材时，必须确认其商用与再分发许可，并同步更新署名文件。

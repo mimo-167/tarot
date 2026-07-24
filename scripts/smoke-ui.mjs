@@ -25,14 +25,29 @@ try {
   const englishContext = await browser.createBrowserContext();
   const page = await englishContext.newPage();
   watchErrors(page, "desktop");
+  await page.setRequestInterception(true);
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/reading")) {
+      void request.respond({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ reading: "## Card-by-card\n\n### First card | The Fool · Upright\nA grounded beginning.\n\n## Reading the spread as a whole\nThe cards invite patient action.\n\n## Back to your question\nMove forward while checking the facts.\n\n## Takeaways\n- Name one practical next step.\n- Keep a clear boundary." }),
+      });
+    } else {
+      void request.continue();
+    }
+  });
   await page.setExtraHTTPHeaders({ "Accept-Language": "en-US,en;q=0.9" });
   await page.setViewport({ width: 1440, height: 960, deviceScaleFactor: 1 });
   await page.goto(baseUrl, { waitUntil: "networkidle0" });
   await expectLanguage(page, "en");
-  await page.waitForSelector("::-p-text(Begin a reading)");
+  await page.waitForSelector(".hero-actions .primary");
+  if ((await page.$eval(".language-switch", (element) => element.textContent?.trim())) !== "中文") {
+    throw new Error("English UI does not show the full Chinese language label");
+  }
   await page.screenshot({ path: path.join(artifacts, "home-en-desktop.png"), fullPage: true });
 
-  await page.locator("::-p-text(Begin a reading)").click();
+  await page.locator(".hero-actions .primary").click();
   await page.waitForSelector(".spread-card");
   const spreadCount = await page.$$eval(".spread-card", (items) => items.length);
   if (spreadCount !== 9) throw new Error(`Expected 9 spreads, found ${spreadCount}`);
@@ -44,6 +59,9 @@ try {
   // Switching language must preserve in-progress game state and persist the explicit preference.
   await page.locator(".language-switch").click();
   await expectLanguage(page, "zh-CN");
+  if ((await page.$eval(".language-switch", (element) => element.textContent?.trim())) !== "English") {
+    throw new Error("Chinese UI does not show the full English language label");
+  }
   if (await page.$eval("textarea", (element) => element.value) !== question) {
     throw new Error("The question was lost when switching to Chinese");
   }
@@ -53,7 +71,13 @@ try {
     throw new Error("The question was lost when switching back to English");
   }
 
-  await page.locator("::-p-text(Enter the tarot table)").click();
+  await page.locator("::-p-text(Continue to a quiet moment)").click();
+  await page.waitForSelector(".preparation-screen");
+  const initiallyDisabled = await page.$eval(".preparation-actions .primary", (element) => element.hasAttribute("disabled"));
+  if (!initiallyDisabled) throw new Error("The preparation page did not create a short guided pause");
+  await page.screenshot({ path: path.join(artifacts, "preparation-en-desktop.png"), fullPage: true });
+  await page.waitForFunction(() => !document.querySelector(".preparation-actions .primary")?.hasAttribute("disabled"), { timeout: 5_000 });
+  await page.locator(".preparation-actions .primary").click();
   await page.waitForSelector(".tarot-table .table-card");
   const deckCount = await page.$$eval(".tarot-table .table-card", (items) => items.length);
   if (deckCount !== 78) throw new Error(`Expected 78 deck buttons, found ${deckCount}`);
@@ -67,7 +91,25 @@ try {
     await page.locator("::-p-text(Reveal this card)").click();
   }
   await new Promise((resolve) => setTimeout(resolve, 1100));
+  const revealedCardOpacity = await page.$eval(".reveal-card.revealed", (element) => getComputedStyle(element).opacity);
+  if (revealedCardOpacity !== "1") {
+    throw new Error(`Revealed card artwork is dimmed: opacity ${revealedCardOpacity}`);
+  }
+  if (await page.$(".sound-controls, [aria-label*='sound' i]")) {
+    throw new Error("Music or sound-effect controls are still present");
+  }
   await page.screenshot({ path: path.join(artifacts, "reading-en-desktop.png"), fullPage: true });
+
+  // A share action must open an in-site preview with an explicit download link.
+  await page.locator("::-p-text(Create share image)").click();
+  await page.waitForSelector(".share-preview-dialog");
+  await page.waitForFunction(() => (document.querySelector(".share-preview-dialog img")?.naturalWidth || 0) > 0);
+  const downloadName = await page.$eval(".share-preview-actions a[download]", (element) => element.getAttribute("download"));
+  if (!downloadName?.endsWith(".png")) throw new Error("Share preview does not expose a PNG download");
+  await new Promise((resolve) => setTimeout(resolve, 450));
+  await page.screenshot({ path: path.join(artifacts, "share-preview-en-desktop.png"), fullPage: true });
+  await page.locator('[aria-label="Close share image preview"]').click();
+
   await page.locator("::-p-text(View local meanings)").click();
   await page.waitForSelector(".reading-dialog");
   const readingCount = await page.$$eval(".local-card-reading", (items) => items.length);
@@ -77,12 +119,24 @@ try {
     throw new Error("English local reading contains Chinese copy");
   }
 
+  await page.locator("::-p-text(Create a reading image)").click();
+  await page.waitForSelector(".share-preview-dialog");
+  await page.locator('[aria-label="Close share image preview"]').click();
+
+  await page.locator("::-p-text(AI combined analysis)").click();
+  await page.locator("::-p-text(Start combined reading)").click();
+  await page.waitForSelector("::-p-text(Back to your question)");
+  await page.locator("::-p-text(Create a reading image)").click();
+  await page.waitForSelector(".share-preview-dialog");
+  await page.waitForFunction(() => (document.querySelector(".share-preview-dialog img")?.naturalWidth || 0) > 0);
+  await page.locator('[aria-label="Close share image preview"]').click();
+
   await page.locator('[aria-label="Close reading"]').click();
   await page.locator(".language-switch").click();
   await expectLanguage(page, "zh-CN");
   await page.reload({ waitUntil: "networkidle0" });
   await expectLanguage(page, "zh-CN");
-  await page.waitForSelector("::-p-text(开始一次占卜)");
+  await page.waitForSelector("::-p-text(进入牌阵选择)");
 
   const mobileContext = await browser.createBrowserContext();
   const mobile = await mobileContext.newPage();
@@ -105,7 +159,7 @@ try {
   await englishContext.close();
   await mobileContext.close();
   if (errors.length) throw new Error(`Browser console errors:\n${errors.join("\n")}`);
-  console.log("Bilingual UI smoke passed: browser-language SSR, persistent switch, 9 spreads, 78-card table, English local reading, and mobile language control.");
+  console.log("UI smoke passed: bilingual labels, guided preparation, 78-card flow, in-site preview/download, local and AI reading share actions, and mobile language control.");
 } finally {
   await browser.close();
 }

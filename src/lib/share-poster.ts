@@ -12,9 +12,7 @@ const posterCopy = {
     disclaimer: "星月塔罗 · 仅用于娱乐、自我观察与启发",
     failed: "分享图生成失败",
     fileName: (spread: string) => `星月塔罗-${spread}.png`,
-    shareTitle: "我的星月塔罗牌阵",
-    shareOpened: "已打开系统分享面板",
-    generated: "分享图已生成",
+    readingTitle: "解读摘录",
   },
   en: {
     unsupported: "This browser cannot create a share image",
@@ -24,9 +22,7 @@ const posterCopy = {
     disclaimer: "Moon & Stars Tarot · For entertainment and reflection only",
     failed: "Could not create the share image",
     fileName: (spread: string) => `moon-stars-tarot-${spread.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`,
-    shareTitle: "My Moon & Stars Tarot spread",
-    shareOpened: "The system share panel is open",
-    generated: "Share image created",
+    readingTitle: "Reading snapshot",
   },
 } satisfies Record<Locale, {
   unsupported: string;
@@ -36,9 +32,7 @@ const posterCopy = {
   disclaimer: string;
   failed: string;
   fileName: (spread: string) => string;
-  shareTitle: string;
-  shareOpened: string;
-  generated: string;
+  readingTitle: string;
 }>;
 
 const loadImage = (source: string) =>
@@ -54,7 +48,74 @@ const roundedRect = (context: CanvasRenderingContext2D, x: number, y: number, w:
   context.roundRect(x, y, w, h, r);
 };
 
-export async function createSharePoster(cards: DrawnCard[], spread: Spread, locale: Locale = "zh-CN") {
+export const readingExcerpt = (value: string) => value
+  .replace(/```[\s\S]*?```/g, " ")
+  .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+  .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+  .replace(/[#>*_`~|]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const wrapCanvasText = (
+  context: CanvasRenderingContext2D,
+  value: string,
+  maxWidth: number,
+  maxLines: number,
+) => {
+  const lines: string[] = [];
+  let line = "";
+  const pushPiece = (piece: string) => {
+    if (lines.length >= maxLines) return;
+    const candidate = line ? `${line} ${piece}` : piece;
+    if (context.measureText(candidate).width <= maxWidth) {
+      line = candidate;
+      return;
+    }
+    if (line) lines.push(line);
+    if (lines.length >= maxLines) {
+      line = "";
+      return;
+    }
+    line = piece;
+  };
+
+  for (const word of value.split(/\s+/)) {
+    if (context.measureText(word).width <= maxWidth) {
+      pushPiece(word);
+    } else {
+      let fragment = "";
+      for (const character of Array.from(word)) {
+        const candidate = `${fragment}${character}`;
+        if (fragment && context.measureText(candidate).width > maxWidth) {
+          pushPiece(fragment);
+          fragment = character;
+        } else {
+          fragment = candidate;
+        }
+      }
+      if (fragment) pushPiece(fragment);
+    }
+    if (lines.length >= maxLines) break;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  if (lines.length === maxLines && value.length > lines.join(" ").length) {
+    let last = lines.at(-1) || "";
+    while (last && context.measureText(`${last}…`).width > maxWidth) last = last.slice(0, -1);
+    lines[lines.length - 1] = `${last.trimEnd()}…`;
+  }
+  return lines;
+};
+
+export function getShareFileName(spread: Spread, locale: Locale = "zh-CN") {
+  return posterCopy[locale].fileName(localizeSpread(spread, locale).name);
+}
+
+export async function createSharePoster(
+  cards: DrawnCard[],
+  spread: Spread,
+  locale: Locale = "zh-CN",
+  reading = "",
+) {
   const copy = posterCopy[locale];
   const displaySpread = localizeSpread(spread, locale);
   const canvas = document.createElement("canvas");
@@ -134,10 +195,29 @@ export async function createSharePoster(cards: DrawnCard[], spread: Spread, loca
     }),
   );
 
+  const excerpt = readingExcerpt(reading);
+  if (excerpt) {
+    roundedRect(context, 78, 944, 924, 256, 18);
+    context.fillStyle = "rgba(22, 13, 34, .88)";
+    context.fill();
+    context.strokeStyle = "rgba(217, 188, 117, .28)";
+    context.lineWidth = 2;
+    context.stroke();
+    context.textAlign = "left";
+    context.fillStyle = "#d7ba76";
+    context.font = "600 24px sans-serif";
+    context.fillText(copy.readingTitle, 112, 990);
+    context.fillStyle = "#d7cedc";
+    context.font = "25px sans-serif";
+    wrapCanvasText(context, excerpt, 856, 5).forEach((line, index) => {
+      context.fillText(line, 112, 1035 + index * 34);
+    });
+  }
+
   context.textAlign = "center";
   context.fillStyle = "#d7ba76";
   context.font = "28px serif";
-  context.fillText(copy.reflection, 540, 1268);
+  context.fillText(copy.reflection, 540, excerpt ? 1248 : 1268);
   context.fillStyle = "#8f819f";
   context.font = "22px sans-serif";
   context.fillText(copy.disclaimer, 540, 1312);
@@ -145,22 +225,4 @@ export async function createSharePoster(cards: DrawnCard[], spread: Spread, loca
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error(copy.failed))), "image/png"),
   );
-}
-
-export async function sharePoster(cards: DrawnCard[], spread: Spread, locale: Locale = "zh-CN") {
-  const copy = posterCopy[locale];
-  const displaySpread = localizeSpread(spread, locale);
-  const blob = await createSharePoster(cards, spread, locale);
-  const file = new File([blob], copy.fileName(displaySpread.name), { type: "image/png" });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ title: copy.shareTitle, files: [file] });
-    return copy.shareOpened;
-  }
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = file.name;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-  return copy.generated;
 }

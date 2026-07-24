@@ -8,14 +8,6 @@ export type AppMessages = {
   navSpreads: string;
   navDaily: string;
   navFavorites: string;
-  ambient: string;
-  soundEffects: string;
-  ambientTitle: string;
-  soundEffectsTitle: string;
-  ambientEnable: string;
-  ambientDisable: string;
-  soundEffectsEnable: string;
-  soundEffectsDisable: string;
   languageLabel: string;
   languageButton: string;
   favoriteAdded: string;
@@ -65,6 +57,13 @@ export type AppMessages = {
   or: string;
   positionOrder: string;
   enterTable: string;
+  preparationEyebrow: string;
+  preparationTitle: string;
+  preparationLead: string;
+  preparationSteps: string[];
+  preparationWaiting: string;
+  preparationReady: string;
+  preparationBack: string;
   backToQuestion: string;
   chooseCards: string;
   chooseCardAria: (index: number) => string;
@@ -87,6 +86,14 @@ export type AppMessages = {
   keepCards: string;
   cardsKept: string;
   generateShare: string;
+  shareReading: string;
+  shareGenerating: string;
+  sharePreviewTitle: string;
+  sharePreviewLead: string;
+  sharePreviewAlt: string;
+  shareDownload: string;
+  shareDownloadHint: string;
+  shareClose: string;
   chooseAgain: string;
   dailyEyebrow: string;
   dailyTitle: string;
@@ -129,16 +136,8 @@ const zhCN: AppMessages = {
   navSpreads: "牌阵",
   navDaily: "日运牌",
   navFavorites: "收藏",
-  ambient: "氛围",
-  soundEffects: "音效",
-  ambientTitle: "环境氛围音",
-  soundEffectsTitle: "交互音效",
-  ambientEnable: "开启环境氛围音",
-  ambientDisable: "关闭环境氛围音",
-  soundEffectsEnable: "开启交互音效",
-  soundEffectsDisable: "关闭交互音效",
   languageLabel: "切换到英文",
-  languageButton: "EN",
+  languageButton: "English",
   favoriteAdded: "已收藏这个牌阵",
   favoriteRemoved: "已取消收藏",
   optionsRequired: "请先写清 A、B 两个选项",
@@ -155,7 +154,7 @@ const zhCN: AppMessages = {
   completeDeck: "张完整 RWS 牌",
   immersiveSpreads: "种沉浸式牌阵",
   layeredReading: "本地 + AI 解读",
-  ritualSteps: ["选择牌阵", "默念问题", "亲手选牌", "观察与解读"],
+  ritualSteps: ["选择牌阵", "默念问题", "静心片刻", "选牌与解读"],
   spreadsEyebrow: "CHOOSE YOUR SPREAD",
   spreadsTitle: "选择你的牌阵",
   spreadsLead: "每一种牌阵，都适合不同的问题。",
@@ -185,7 +184,14 @@ const zhCN: AppMessages = {
   secondPath: "第二条道路",
   or: "或",
   positionOrder: "牌位顺序",
-  enterTable: "进入塔罗牌桌",
+  enterTable: "进入静心引导",
+  preparationEyebrow: "BEFORE THE DRAW",
+  preparationTitle: "先让问题安静地留在心里",
+  preparationLead: "如果方便，轻轻闭上眼睛。这里没有需要立刻得到的答案，只需要给自己几秒钟，听见真正想问的是什么。",
+  preparationSteps: ["放松肩膀，做一次缓慢的呼吸", "在心里默念你最想看清的问题", "不追逐答案，只留意此刻最真实的感受"],
+  preparationWaiting: "让这一刻再停留几秒…",
+  preparationReady: "我准备好了，开始选牌",
+  preparationBack: "← 返回修改问题",
   backToQuestion: "← 返回问题",
   chooseCards: "请凭直觉选择卡牌",
   chooseCardAria: (index) => `选择第 ${index} 张牌`,
@@ -208,6 +214,14 @@ const zhCN: AppMessages = {
   keepCards: "暂不解读",
   cardsKept: "已保留牌面，你可以慢慢观察",
   generateShare: "生成分享图",
+  shareReading: "生成解读分享图",
+  shareGenerating: "正在生成分享图…",
+  sharePreviewTitle: "分享图已经准备好",
+  sharePreviewLead: "先查看缩略预览，确认后再下载高清图片到本地。",
+  sharePreviewAlt: "塔罗分享图缩略预览",
+  shareDownload: "下载高清图片",
+  shareDownloadHint: "图片不会自动打开系统共享窗口；点击下载后会保存到浏览器的默认下载位置。",
+  shareClose: "关闭分享图预览",
   chooseAgain: "重新选择这组牌",
   dailyEyebrow: "A CARD FOR TODAY",
   dailyTitle: "日运牌",
@@ -255,16 +269,8 @@ const en: AppMessages = {
   navSpreads: "Spreads",
   navDaily: "Daily Card",
   navFavorites: "Favorites",
-  ambient: "Ambient",
-  soundEffects: "Sound",
-  ambientTitle: "Ambient sound",
-  soundEffectsTitle: "Interaction sounds",
-  ambientEnable: "Turn on ambient sound",
-  ambientDisable: "Turn off ambient sound",
-  soundEffectsEnable: "Turn on interaction sounds",
-  soundEffectsDisable: "Turn off interaction sounds",
   languageLabel: "Switch to Chinese",
-  languageButton: "中",
+  languageButton: "中文",
   favoriteAdded: "Spread added to favorites",
   favoriteRemoved: "Spread removed from favorites",
   optionsRequired: "Please complete both option A and option B",
@@ -281,7 +287,7 @@ const en: AppMessages = {
   completeDeck: "complete RWS cards",
   immersiveSpreads: "immersive spreads",
   layeredReading: "local + AI insight",
-  ritualSteps: ["Choose a spread", "Hold your question", "Choose your cards", "Reflect and read"],
+  ritualSteps: ["Choose a spread", "Hold your question", "Pause and center", "Draw and reflect"],
   spreadsEyebrow: "CHOOSE YOUR SPREAD",
   spreadsTitle: "Choose Your Spread",
   spreadsLead: "Every spread tells a different story.",
@@ -311,7 +317,14 @@ const en: AppMessages = {
   secondPath: "The second path",
   or: "or",
   positionOrder: "Position order",
-  enterTable: "Enter the tarot table",
+  enterTable: "Continue to a quiet moment",
+  preparationEyebrow: "BEFORE THE DRAW",
+  preparationTitle: "Let the question settle within you",
+  preparationLead: "If it feels comfortable, gently close your eyes. There is no answer to chase right away—just give yourself a few seconds to hear what you truly want to ask.",
+  preparationSteps: ["Relax your shoulders and take one slow breath", "Silently repeat the question you most want to understand", "Let go of forcing an answer and notice what feels most honest"],
+  preparationWaiting: "Stay with this moment for a few more seconds…",
+  preparationReady: "I’m ready to choose my cards",
+  preparationBack: "← Back to edit the question",
   backToQuestion: "← Back to question",
   chooseCards: "Choose your cards by intuition",
   chooseCardAria: (index) => `Choose card ${index}`,
@@ -334,6 +347,14 @@ const en: AppMessages = {
   keepCards: "Reflect for now",
   cardsKept: "Your cards are staying open so you can take your time",
   generateShare: "Create share image",
+  shareReading: "Create a reading image",
+  shareGenerating: "Creating your share image…",
+  sharePreviewTitle: "Your share image is ready",
+  sharePreviewLead: "Review the smaller preview first, then download the full-resolution image to your device.",
+  sharePreviewAlt: "Preview of the tarot share image",
+  shareDownload: "Download full-resolution image",
+  shareDownloadHint: "No system share window will open. The image will be saved to your browser’s default download location.",
+  shareClose: "Close share image preview",
   chooseAgain: "Choose this spread again",
   dailyEyebrow: "A CARD FOR TODAY",
   dailyTitle: "Daily Card",
