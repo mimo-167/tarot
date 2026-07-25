@@ -30,7 +30,10 @@ export type AppMessages = {
   spreadsTitle: string;
   spreadsLead: string;
   spreadFilterLabel: string;
-  filters: Record<"all" | "general" | "love" | "career" | "choice", string>;
+  filters: Record<"all" | "general" | "love" | "career" | "self", string>;
+  basicSpreads: string;
+  advancedSpreads: string;
+  suitableQuestions: string;
   ethicalNote: string;
   favoritesEyebrow: string;
   favoritesTitle: string;
@@ -157,7 +160,10 @@ const zhCN: AppMessages = {
   spreadsTitle: "选择你的牌阵",
   spreadsLead: "每一种牌阵，都适合不同的问题。",
   spreadFilterLabel: "筛选牌阵",
-  filters: { all: "全部", general: "通用", love: "感情", career: "事业", choice: "抉择" },
+  filters: { all: "全部", general: "通用", love: "感情", career: "事业", self: "自我探索" },
+  basicSpreads: "基础牌阵",
+  advancedSpreads: "进阶牌阵",
+  suitableQuestions: "适合提问",
   ethicalNote: "塔罗用于娱乐、自我观察与启发；它不会替你读取他人内心，也不会替你作重大决定。",
   favoritesEyebrow: "YOUR COLLECTION",
   favoritesTitle: "收藏的牌阵",
@@ -289,7 +295,10 @@ const en: AppMessages = {
   spreadsTitle: "Choose Your Spread",
   spreadsLead: "Every spread tells a different story.",
   spreadFilterLabel: "Filter tarot spreads",
-  filters: { all: "All", general: "General", love: "Love", career: "Career", choice: "Choices" },
+  filters: { all: "All", general: "General", love: "Love", career: "Career", self: "Self-Discovery" },
+  basicSpreads: "Essential spreads",
+  advancedSpreads: "Advanced spreads",
+  suitableQuestions: "Questions to ask",
   ethicalNote: "Tarot is for entertainment, reflection, and inspiration. It cannot read another person's mind or make major decisions for you.",
   favoritesEyebrow: "YOUR COLLECTION",
   favoritesTitle: "Favorite spreads",

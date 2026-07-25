@@ -5,7 +5,7 @@ import { POST } from "@/app/api/reading/route";
 
 describe("validateReadingRequest", () => {
   it("accepts a canonical three-card reading", () => {
-    const spread = spreads[0];
+    const spread = spreads.find((item) => item.id === "free3")!;
     const result = validateReadingRequest({
       question: "我该关注什么？",
       spread,
@@ -19,7 +19,7 @@ describe("validateReadingRequest", () => {
   });
 
   it("normalizes English spread copy and ignores client-provided positions", () => {
-    const spread = spreads[0];
+    const spread = spreads.find((item) => item.id === "free3")!;
     const result = validateReadingRequest({
       locale: "en",
       question: "What deserves my attention?",
@@ -36,20 +36,20 @@ describe("validateReadingRequest", () => {
       request: {
         locale: "en",
         spread: {
-          name: "Three-Card Reflection",
-          positions: ["First card", "Second card", "Third card"],
+          name: "Open Three-Card Spread",
+          positions: ["Present situation", "Central influence", "Development trend"],
         },
         cards: [
-          { position: "First card" },
-          { position: "Second card" },
-          { position: "Third card" },
+          { position: "Present situation" },
+          { position: "Central influence" },
+          { position: "Development trend" },
         ],
       },
     });
   });
 
   it("rejects duplicate cards", () => {
-    const spread = spreads[0];
+    const spread = spreads.find((item) => item.id === "free3")!;
     const result = validateReadingRequest({
       spread,
       cards: spread.positions.map((position) => ({ id: "M00", position, orientation: "upright" })),

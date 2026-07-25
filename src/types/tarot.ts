@@ -2,7 +2,8 @@ import type { Locale } from "@/i18n/config";
 
 export type Orientation = "upright" | "reversed";
 
-export type SpreadCategory = "general" | "love" | "career" | "choice";
+export type SpreadCategory = "general" | "love" | "career" | "self";
+export type SpreadDifficulty = "basic" | "advanced";
 
 export type TarotCard = {
   id: string;
@@ -32,8 +33,11 @@ export type Spread = {
   descriptionEn: string;
   positions: string[];
   positionsEn: string[];
+  questions: string[];
+  questionsEn: string[];
   needsOptions?: boolean;
   category: SpreadCategory;
+  difficulty: SpreadDifficulty;
 };
 
 export type LocalizedSpread = Pick<Spread, "id" | "needsOptions"> & {
@@ -41,7 +45,9 @@ export type LocalizedSpread = Pick<Spread, "id" | "needsOptions"> & {
   eyebrow: string;
   description: string;
   positions: string[];
+  questions: string[];
   category: string;
+  difficulty: string;
 };
 
 export type DrawnCard = TarotCard & {

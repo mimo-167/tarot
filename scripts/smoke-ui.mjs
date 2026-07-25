@@ -60,8 +60,17 @@ try {
   await page.locator(".hero-actions .primary").click();
   await page.waitForSelector(".spread-card");
   const spreadCount = await page.$$eval(".spread-card", (items) => items.length);
-  if (spreadCount !== 9) throw new Error(`Expected 9 spreads, found ${spreadCount}`);
-  await page.locator(".spread-card .spread-main").click();
+  if (spreadCount !== 23) throw new Error(`Expected 23 spreads, found ${spreadCount}`);
+  const spreadDetails = await page.$$eval(".spread-card", (items) => items.map((item) => ({
+    category: item.querySelector(".spread-category-pill")?.textContent?.trim(),
+    questions: item.querySelectorAll(".spread-questions span").length,
+  })));
+  if (spreadDetails.some((spread) => !spread.category || spread.questions < 1)) {
+    throw new Error("A spread card is missing its category, difficulty, or suitable questions");
+  }
+  await new Promise((resolve) => setTimeout(resolve, 1_300));
+  await page.screenshot({ path: path.join(artifacts, "spreads-en-desktop.png"), fullPage: true });
+  await page.locator('[data-spread-id="free3"] .spread-main').click();
   await page.waitForSelector(".question-card");
   const question = "What direction deserves my attention at work over the next three months?";
   await page.locator("textarea").fill(question);

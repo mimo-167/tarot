@@ -11,7 +11,8 @@ describe("share poster helpers", () => {
   });
 
   it("creates localized PNG download names", () => {
-    expect(getShareFileName(spreads[0], "zh-CN")).toBe("星月塔罗-三张自由牌.png");
-    expect(getShareFileName(spreads[0], "en")).toBe("moon-stars-tarot-three-card-reflection.png");
+    const spread = spreads.find((item) => item.id === "free3")!;
+    expect(getShareFileName(spread, "zh-CN")).toBe("星月塔罗-无牌阵（3张）.png");
+    expect(getShareFileName(spread, "en")).toBe("moon-stars-tarot-open-three-card-spread.png");
   });
 });

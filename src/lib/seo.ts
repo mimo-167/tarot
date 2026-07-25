@@ -12,14 +12,14 @@ export const seoByLocale: Record<
   "zh-CN": {
     title: "星月塔罗｜免费在线 RWS 塔罗牌与 AI 辅助解读",
     description:
-      "免费体验 78 张 RWS 韦特塔罗牌、9 种沉浸式牌阵与每日一牌，结合本地牌义和可选 AI 辅助解读，帮助你进行自我观察与反思。",
+      "免费体验 78 张 RWS 韦特塔罗牌、23 种基础与进阶牌阵及每日一牌，结合本地牌义和可选 AI 辅助解读，帮助你进行自我观察与反思。",
     keywords: ["塔罗", "在线塔罗", "免费塔罗", "RWS 塔罗", "韦特塔罗", "塔罗牌阵", "每日一牌", "AI 塔罗解读"],
     ogLocale: "zh_CN",
   },
   en: {
     title: "Moon & Stars Tarot | Free Online RWS Tarot Reading",
     description:
-      "Explore all 78 Rider–Waite–Smith cards, nine immersive spreads, and a daily card with local meanings and optional AI-assisted reflection.",
+      "Explore all 78 Rider–Waite–Smith cards, 23 essential and advanced spreads, and a daily card with local meanings and optional AI-assisted reflection.",
     keywords: ["tarot", "online tarot", "free tarot reading", "RWS tarot", "Rider-Waite-Smith", "tarot spreads", "daily tarot card", "AI tarot reading"],
     ogLocale: "en_US",
   },

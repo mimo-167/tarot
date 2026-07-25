@@ -20,7 +20,7 @@ const cards = cardsJson as TarotCard[];
 const cjkPattern = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/u;
 
 function makeReading(locale: Locale) {
-  const spread = localizeSpread(spreads[0], locale);
+  const spread = localizeSpread(spreads.find((item) => item.id === "free3")!, locale);
   const selectedCards = ["M00", "M01", "M02"].map((id) => {
     const card = cards.find((candidate) => candidate.id === id);
     if (!card) throw new Error(`Missing test card: ${id}`);
@@ -73,8 +73,8 @@ describe("localized reading prompts", () => {
     expect(SYSTEM_PROMPTS.en).toContain("## Back to your question");
     expect(SYSTEM_PROMPTS.en).toContain("## Takeaways");
     expect(SYSTEM_PROMPTS.en).toContain("### Position | Card · Upright/Reversed");
-    expect(userPrompt).toContain("Position: First card");
-    expect(userPrompt).toContain("Position: Second card");
+    expect(userPrompt).toContain("Position: Present situation");
+    expect(userPrompt).toContain("Position: Central influence");
     expect(userPrompt).toContain("· Upright");
     expect(userPrompt).toContain("· Reversed");
     expect(userPrompt).toContain("What theme in my life deserves the most attention right now?");
@@ -89,7 +89,7 @@ describe("localized reading prompts", () => {
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 这组牌连起来看");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 回到你的问题");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 可以带走的提醒");
-    expect(userPrompt).toContain("位置：第一张");
+    expect(userPrompt).toContain("位置：现状");
     expect(userPrompt).toContain("· 正位");
     expect(userPrompt).toContain("· 逆位");
   });

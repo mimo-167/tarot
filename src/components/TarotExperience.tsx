@@ -34,7 +34,10 @@ const DAILY_SPREAD: Spread = {
   descriptionEn: "Use one card to notice a theme worth carrying through today.",
   positions: ["今日指引"],
   positionsEn: ["Today's guidance"],
+  questions: ["今天最值得留意的主题是什么？"],
+  questionsEn: ["What theme deserves my attention today?"],
   category: "general",
+  difficulty: "basic",
 };
 const localDayKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -413,7 +416,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
               <button className="button text-button" onClick={() => void openDaily()}><Icon name="spark" /> {copy.drawDailyGuide}</button>
             </div>
             <div className="trust-row">
-              <span><b>78</b> {copy.completeDeck}</span><i /><span><b>9</b> {copy.immersiveSpreads}</span><i /><span><b>{locale === "en" ? "2 layers" : "双层"}</b> {copy.layeredReading}</span>
+              <span><b>78</b> {copy.completeDeck}</span><i /><span><b>{spreads.length}</b> {copy.immersiveSpreads}</span><i /><span><b>{locale === "en" ? "2 layers" : "双层"}</b> {copy.layeredReading}</span>
             </div>
           </div>
           <div className="hero-orbit" aria-hidden="true">
@@ -430,9 +433,9 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
         <section className="content-screen screen-enter">
           <div className="section-heading"><p className="eyebrow">{copy.spreadsEyebrow}</p><h2>{copy.spreadsTitle}</h2><p>{copy.spreadsLead}</p></div>
           <div className="filter-row" role="group" aria-label={copy.spreadFilterLabel}>
-            {(["all", "general", "love", "career", "choice"] as SpreadFilter[]).map((filter) => <button key={filter} className={spreadFilter === filter ? "active" : ""} onClick={() => setSpreadFilter(filter)}>{copy.filters[filter]}</button>)}
+            {(["all", "general", "love", "career", "self"] as SpreadFilter[]).map((filter) => <button key={filter} className={spreadFilter === filter ? "active" : ""} onClick={() => setSpreadFilter(filter)}>{copy.filters[filter]}</button>)}
           </div>
-          <SpreadGrid spreads={filteredSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} />
+          <SpreadCollection spreads={filteredSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} />
           <p className="ethical-note"><Icon name="moon" /> {copy.ethicalNote}</p>
         </section>
       )}
@@ -440,7 +443,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
       {view === "favorites" && (
         <section className="content-screen favorites-screen screen-enter">
           <div className="section-heading"><p className="eyebrow">{copy.favoritesEyebrow}</p><h2>{copy.favoritesTitle}</h2><p>{copy.favoritesLead}</p></div>
-          {favoriteSpreads.length ? <SpreadGrid spreads={favoriteSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} /> : <div className="empty-state"><span>☾</span><h3>{copy.favoritesEmptyTitle}</h3><p>{copy.favoritesEmptyLead}</p><button className="button secondary" onClick={() => setView("spreads")}>{copy.browseSpreads}</button></div>}
+          {favoriteSpreads.length ? <SpreadCollection spreads={favoriteSpreads} favorites={favorites} onChoose={chooseSpread} onFavorite={toggleFavorite} locale={locale} /> : <div className="empty-state"><span>☾</span><h3>{copy.favoritesEmptyTitle}</h3><p>{copy.favoritesEmptyLead}</p><button className="button secondary" onClick={() => setView("spreads")}>{copy.browseSpreads}</button></div>}
         </section>
       )}
 
@@ -534,12 +537,26 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
   );
 }
 
+function SpreadCollection({ spreads: items, favorites, onChoose, onFavorite, locale }: { spreads: Spread[]; favorites: string[]; onChoose: (spread: Spread) => void; onFavorite: (id: string) => void; locale: Locale }) {
+  const copy = appMessages[locale];
+  return <div className="spread-collection">
+    {(["basic", "advanced"] as const).map((difficulty) => {
+      const group = items.filter((spread) => spread.difficulty === difficulty);
+      if (!group.length) return null;
+      return <section className="spread-level" key={difficulty}>
+        <h3><span aria-hidden="true">✦</span>{difficulty === "basic" ? copy.basicSpreads : copy.advancedSpreads}<span aria-hidden="true">✦</span></h3>
+        <SpreadGrid spreads={group} favorites={favorites} onChoose={onChoose} onFavorite={onFavorite} locale={locale} />
+      </section>;
+    })}
+  </div>;
+}
+
 function SpreadGrid({ spreads: items, favorites, onChoose, onFavorite, locale }: { spreads: Spread[]; favorites: string[]; onChoose: (spread: Spread) => void; onFavorite: (id: string) => void; locale: Locale }) {
   const copy = appMessages[locale];
   return <div className="spread-grid">{items.map((spread, index) => {
     const displaySpread = localizeSpread(spread, locale);
     const favorite = favorites.includes(spread.id);
-    return <article className="spread-card" key={spread.id} style={{ "--delay": `${index * 55}ms` } as React.CSSProperties}><button className={`favorite-button ${favorite ? "active" : ""}`} onClick={() => onFavorite(spread.id)} aria-label={favorite ? copy.unfavoriteAria(displaySpread.name) : copy.favoriteAria(displaySpread.name)}><Icon name="heart" /></button><button className="spread-main" onClick={() => onChoose(spread)}><div className="spread-glyph" data-count={displaySpread.positions.length}>{Array.from({ length: Math.min(displaySpread.positions.length, 8) }).map((_, cardIndex) => <i key={cardIndex} />)}</div><small>{displaySpread.eyebrow}</small><h3>{displaySpread.name}</h3><p>{displaySpread.description}</p><div className="spread-meta"><span>{copy.cardsUnit(displaySpread.positions.length)}</span><b>{displaySpread.category}</b></div><span className="spread-enter">{copy.chooseSpread} <Icon name="arrow" /></span></button></article>;
+    return <article className="spread-card" data-spread-id={spread.id} key={spread.id} style={{ "--delay": `${index * 55}ms` } as React.CSSProperties}><button className={`favorite-button ${favorite ? "active" : ""}`} onClick={() => onFavorite(spread.id)} aria-label={favorite ? copy.unfavoriteAria(displaySpread.name) : copy.favoriteAria(displaySpread.name)}><Icon name="heart" /></button><button className="spread-main" onClick={() => onChoose(spread)}><div className="spread-glyph" data-count={displaySpread.positions.length}>{Array.from({ length: Math.min(displaySpread.positions.length, 8) }).map((_, cardIndex) => <i key={cardIndex} />)}</div><span className="spread-category-pill">✦ {displaySpread.category} · {displaySpread.difficulty} ✦</span><h3>{displaySpread.name}</h3><span className="spread-ornament" aria-hidden="true">— ✦ —</span><p>{displaySpread.description}</p><div className="spread-questions"><small>{copy.suitableQuestions}</small><div>{displaySpread.questions.slice(0, 3).map((item) => <span key={item}>?<b>{item}</b></span>)}</div></div><div className="spread-meta"><span>{copy.cardsUnit(displaySpread.positions.length)}</span></div><span className="spread-enter">{copy.chooseSpread} <Icon name="arrow" /></span></button></article>;
   })}</div>;
 }
 
