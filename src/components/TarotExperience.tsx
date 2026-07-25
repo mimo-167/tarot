@@ -423,11 +423,6 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
             <div className="floating-card card-right"><span className="tarot-back-art">☾</span></div>
             <span className="orbit-symbol symbol-one">☉</span><span className="orbit-symbol symbol-two">✧</span><span className="orbit-symbol symbol-three">☽</span>
           </div>
-          <div className="ritual-line">
-            {copy.ritualSteps.map((label, index) => (
-              <div key={label}><span>{String(index + 1).padStart(2, "0")}</span><p>{label}</p></div>
-            ))}
-          </div>
         </section>
       )}
 

@@ -26,7 +26,6 @@ export type AppMessages = {
   completeDeck: string;
   immersiveSpreads: string;
   layeredReading: string;
-  ritualSteps: string[];
   spreadsEyebrow: string;
   spreadsTitle: string;
   spreadsLead: string;
@@ -154,7 +153,6 @@ const zhCN: AppMessages = {
   completeDeck: "张完整 RWS 牌",
   immersiveSpreads: "种沉浸式牌阵",
   layeredReading: "本地 + AI 解读",
-  ritualSteps: ["选择牌阵", "默念问题", "静心片刻", "选牌与解读"],
   spreadsEyebrow: "CHOOSE YOUR SPREAD",
   spreadsTitle: "选择你的牌阵",
   spreadsLead: "每一种牌阵，都适合不同的问题。",
@@ -287,7 +285,6 @@ const en: AppMessages = {
   completeDeck: "complete RWS cards",
   immersiveSpreads: "immersive spreads",
   layeredReading: "local + AI insight",
-  ritualSteps: ["Choose a spread", "Hold your question", "Pause and center", "Draw and reflect"],
   spreadsEyebrow: "CHOOSE YOUR SPREAD",
   spreadsTitle: "Choose Your Spread",
   spreadsLead: "Every spread tells a different story.",

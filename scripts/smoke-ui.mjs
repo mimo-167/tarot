@@ -45,6 +45,16 @@ try {
   if ((await page.$eval(".language-switch", (element) => element.textContent?.trim())) !== "中文") {
     throw new Error("English UI does not show the full Chinese language label");
   }
+  if (await page.$(".ritual-line")) {
+    throw new Error("The removed home ritual timeline is still present");
+  }
+  const footerShape = await page.$eval(".site-footer", (element) => ({
+    paragraphs: element.querySelectorAll(":scope > p").length,
+    navigation: element.querySelectorAll(":scope > nav").length,
+  }));
+  if (footerShape.paragraphs !== 1 || footerShape.navigation !== 0) {
+    throw new Error(`Footer is not reduced to one content line: ${JSON.stringify(footerShape)}`);
+  }
   await page.screenshot({ path: path.join(artifacts, "home-en-desktop.png"), fullPage: true });
 
   await page.locator(".hero-actions .primary").click();
