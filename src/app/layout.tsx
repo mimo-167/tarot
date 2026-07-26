@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { LazyGoogleAnalytics } from "@/components/LazyGoogleAnalytics";
+import Script from "next/script";
 import { getRequestLocale } from "@/i18n/server";
 import {
   serializedStructuredData,
@@ -67,7 +67,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           dangerouslySetInnerHTML={{ __html: serializedStructuredData }}
         />
         {children}
-        <LazyGoogleAnalytics />
+        <Script
+          id="google-analytics"
+          src="https://www.googletagmanager.com/gtag/js?id=G-MQ2VLF2X8F"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics-config" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag("js", new Date());
+          gtag("config", "G-MQ2VLF2X8F");`}
+        </Script>
       </body>
     </html>
   );
