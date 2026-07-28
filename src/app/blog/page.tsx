@@ -1,76 +1,52 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getRequestLocale } from "@/i18n/server";
-import { SITE_NAME_EN, SITE_URL } from "@/lib/seo";
+import {
+  blogArticles,
+  categoryDetails,
+  estimateReadingTime,
+} from "@/content/blog-articles";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
-const copy = {
-  "zh-CN": {
-    title: "星月塔罗 Blog",
-    description: "塔罗学习、RWS 牌义、牌阵练习与自我观察笔记。文章即将更新。",
-    brand: "星月塔罗",
-    home: "返回首页",
-    spreads: "开始占卜",
-    eyebrow: "MOON & STARS JOURNAL",
-    heading: "Blog",
-    lead: "这里会用来整理 RWS 塔罗牌义、牌阵练习、解读边界和自我观察方法。",
-    emptyTitle: "文章还在路上",
-    emptyLead: "你之后写好文章后，我可以把它们整理成列表、详情页和 SEO 数据。现在这个页面先作为公开入口保留。",
-    coming: "Coming soon",
+const title = "塔罗文章与自我探索指南｜星月塔罗 Blog";
+const description =
+  "阅读关于爱情塔罗、事业方向、自我探索、选择困难与 AI 塔罗原理的实用文章，并找到适合当下问题的塔罗牌阵。";
+
+export const metadata: Metadata = {
+  metadataBase: SITE_URL,
+  title,
+  description,
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    type: "website",
+    url: "/blog",
+    title,
+    description,
+    siteName: SITE_NAME,
   },
-  en: {
-    title: "Moon & Stars Tarot Blog",
-    description: "Notes on RWS tarot meanings, spreads, reading boundaries, and reflective practice. Articles are coming soon.",
-    brand: SITE_NAME_EN,
-    home: "Home",
-    spreads: "Start Reading",
-    eyebrow: "MOON & STARS JOURNAL",
-    heading: "Blog",
-    lead: "A future home for RWS tarot meanings, spread practice, reading boundaries, and reflective tarot notes.",
-    emptyTitle: "Articles are coming soon",
-    emptyLead: "When your articles are ready, I can turn them into a list, detail pages, and SEO metadata. For now, this page gives the blog a clean public home.",
-    coming: "Coming soon",
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
   },
 };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  const pageCopy = copy[locale];
-  return {
-    metadataBase: SITE_URL,
-    title: pageCopy.title,
-    description: pageCopy.description,
-    alternates: { canonical: "/blog" },
-    openGraph: {
-      type: "website",
-      url: "/blog",
-      title: pageCopy.title,
-      description: pageCopy.description,
-      siteName: locale === "zh-CN" ? copy["zh-CN"].brand : SITE_NAME_EN,
-    },
-    twitter: {
-      card: "summary",
-      title: pageCopy.title,
-      description: pageCopy.description,
-    },
-  };
-}
-
-export default async function BlogPage() {
-  const locale = await getRequestLocale();
-  const pageCopy = copy[locale];
-
+export default function BlogPage() {
   return (
     <main className="site blog-site">
-      <div className="sky" aria-hidden="true"><span className="shooting-star" /><span className="shooting-star second" /></div>
+      <div className="sky" aria-hidden="true">
+        <span className="shooting-star" />
+        <span className="shooting-star second" />
+      </div>
       <header className="nav-shell">
-        <Link className="brand" href="/" aria-label={pageCopy.home}>
+        <Link className="brand" href="/" aria-label="返回首页">
           <span className="brand-mark" aria-hidden="true">☾</span>
-          <span><strong>{pageCopy.brand}</strong><small>RWS TAROT</small></span>
+          <span><strong>星月塔罗</strong><small>RWS TAROT</small></span>
         </Link>
         <nav aria-label="Blog navigation">
-          <Link href="/">{pageCopy.home}</Link>
-          <Link href="/">{pageCopy.spreads}</Link>
+          <Link href="/">首页</Link>
+          <Link href="/?view=spreads">开始占卜</Link>
           <Link className="active" href="/blog">Blog</Link>
         </nav>
         <div className="header-controls blog-nav-spacer" aria-hidden="true" />
@@ -78,17 +54,45 @@ export default async function BlogPage() {
 
       <section className="blog-screen screen-enter">
         <div className="blog-hero">
-          <p className="eyebrow">{pageCopy.eyebrow}</p>
-          <h1>{pageCopy.heading}</h1>
-          <p>{pageCopy.lead}</p>
+          <p className="eyebrow">MOON & STARS JOURNAL</p>
+          <h1>Blog</h1>
+          <p>从关系、事业与选择中理解牌面，也重新理解自己。</p>
         </div>
 
-        <section className="blog-empty panel-card" aria-labelledby="blog-empty-title">
-          <span aria-hidden="true">✦</span>
-          <small>{pageCopy.coming}</small>
-          <h2 id="blog-empty-title">{pageCopy.emptyTitle}</h2>
-          <p>{pageCopy.emptyLead}</p>
-        </section>
+        <nav className="topic-nav" aria-label="文章主题">
+          {Object.values(categoryDetails).map((category) => (
+            <Link href={category.path} key={category.path}>{category.title}</Link>
+          ))}
+          <Link href="/tarot-spreads">Tarot Spreads</Link>
+        </nav>
+
+        <div className="blog-grid">
+          {blogArticles.map((article) => (
+            <article className="blog-card" key={article.slug}>
+              <Link className="blog-card-image" href={`/blog/${article.slug}`}>
+                <Image
+                  src={article.heroImage}
+                  alt={article.heroAlt}
+                  width={1600}
+                  height={900}
+                  sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                  loading="lazy"
+                />
+              </Link>
+              <div>
+                <Link className="article-category" href={categoryDetails[article.category].path}>
+                  {article.category}
+                </Link>
+                <h2><Link href={`/blog/${article.slug}`}>{article.title}</Link></h2>
+                <p>{article.excerpt}</p>
+                <footer>
+                  <span>{estimateReadingTime(article.content)} 分钟阅读</span>
+                  <Link href={`/blog/${article.slug}`}>阅读全文 →</Link>
+                </footer>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <SiteFooter />

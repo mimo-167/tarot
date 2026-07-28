@@ -38,6 +38,14 @@ export const structuredData = {
       inLanguage: ["zh-CN", "en"],
     },
     {
+      "@type": "Organization",
+      "@id": `${SITE_URL.href}#organization`,
+      url: SITE_URL.href,
+      name: SITE_NAME,
+      alternateName: SITE_NAME_EN,
+      logo: new URL("/favicon.svg", SITE_URL).href,
+    },
+    {
       "@type": "WebApplication",
       "@id": `${SITE_URL.href}#application`,
       url: SITE_URL.href,

@@ -52,7 +52,7 @@
 - Canvas 生成缩略分享图，用户预览后下载到本地；不依赖 Windows 系统共享面板。
 - 前端友好额度与 Cloudflare Rate Limiting binding 双层调用限制。
 - 响应式布局、键盘焦点、状态播报和 `prefers-reduced-motion`。
-- SEO 页面、站点地图、robots、Open Graph 图片和博客入口。
+- SEO 页面、站点地图、robots、Open Graph 图片和博客；当前包含 7 篇中文长文、5 个主题 Hub、FAQ 与 Article/Breadcrumb 结构化数据、相关文章和相关牌阵推荐。
 
 ## 技术栈
 
@@ -76,6 +76,7 @@ src/
 ├─ app/
 │  ├─ api/reading/route.ts       # AI 解读服务端接口
 │  ├─ blog/                      # SEO 内容页
+│  ├─ ai-tarot/ 等主题目录        # SEO Topic Hub 页面
 │  ├─ layout.tsx                 # 全局页面结构和元数据
 │  ├─ page.tsx                   # 首页入口
 │  ├─ sitemap.ts                 # 站点地图
@@ -93,6 +94,7 @@ src/
 │  ├─ reading-validation.ts      # AI 请求校验
 │  ├─ share-poster.ts            # 分享图片生成
 │  └─ game.ts                    # 抽牌核心逻辑
+├─ content/blog-articles.ts      # SEO 文章、FAQ、分类、标签与相关推荐
 └─ types/tarot.ts                # 塔罗业务类型
 
 docs/                             # 产品知识、AI 提示词和内容资料

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { localizeSpread, spreads } from "@/data/spreads";
 import { appMessages } from "@/i18n/messages";
@@ -80,12 +81,22 @@ function Icon({ name }: { name: "moon" | "spark" | "heart" | "arrow" | "share" }
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="icon">{paths[name]}</svg>;
 }
 
-export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
+export function TarotExperience({
+  initialLocale,
+  initialSpreadId,
+  initialView = "home",
+}: {
+  initialLocale: Locale;
+  initialSpreadId?: string;
+  initialView?: AppView;
+}) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const localeRef = useRef(initialLocale);
   const copy = appMessages[locale];
-  const [view, setView] = useState<AppView>("home");
-  const [selectedSpread, setSelectedSpread] = useState<Spread>(spreads[0]);
+  const [view, setView] = useState<AppView>(initialView);
+  const [selectedSpread, setSelectedSpread] = useState<Spread>(
+    spreads.find((spread) => spread.id === initialSpreadId) ?? spreads[0],
+  );
   const [question, setQuestion] = useState<QuestionDraft>(initialQuestion);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [spreadFilter, setSpreadFilter] = useState<SpreadFilter>("all");
@@ -398,7 +409,7 @@ export function TarotExperience({ initialLocale }: { initialLocale: Locale }) {
           <button className={view === "spreads" ? "active" : ""} onClick={() => setView("spreads")}>{copy.navSpreads}</button>
           <button className={view === "daily" ? "active" : ""} onClick={() => void openDaily()}>{copy.navDaily}</button>
           <button className={view === "favorites" ? "active" : ""} onClick={() => setView("favorites")}>{copy.navFavorites}</button>
-          <a href="/blog">Blog</a>
+          <Link href="/blog">Blog</Link>
         </nav>
         <div className="header-controls">
           <button className="language-switch" onClick={toggleLanguage} title={copy.languageLabel} aria-label={copy.languageLabel}><span>{copy.languageButton}</span></button>
