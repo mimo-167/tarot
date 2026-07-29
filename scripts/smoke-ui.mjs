@@ -116,9 +116,10 @@ try {
   for (let index = 0; index < 3; index += 1) {
     await page.locator("::-p-text(Reveal this card)").click();
   }
-  await page.waitForSelector(".save-reading-dialog");
-  await page.locator("::-p-text(Not now)").click();
   await new Promise((resolve) => setTimeout(resolve, 1100));
+  if (await page.$(".save-reading-dialog")) {
+    throw new Error("Guest users still see a save or login prompt after revealing the cards");
+  }
   const revealedCardOpacity = await page.$eval(".reveal-card.revealed", (element) => getComputedStyle(element).opacity);
   if (revealedCardOpacity !== "1") {
     throw new Error(`Revealed card artwork is dimmed: opacity ${revealedCardOpacity}`);
@@ -187,7 +188,7 @@ try {
   await englishContext.close();
   await mobileContext.close();
   if (errors.length) throw new Error(`Browser console errors:\n${errors.join("\n")}`);
-  console.log("UI smoke passed: bilingual labels, guided preparation, 78-card flow, save prompt, in-site preview/download, local and AI reading share actions, and mobile language control.");
+  console.log("UI smoke passed: bilingual labels, guided preparation, 78-card guest flow without a save prompt, in-site preview/download, local and AI reading share actions, and mobile language control.");
 } finally {
   await browser.close();
 }
