@@ -10,7 +10,9 @@ export function middleware(request: NextRequest) {
   }
 
   const forwardedProto = request.headers.get("x-forwarded-proto");
-  const isHttp = forwardedProto === "http" || request.nextUrl.protocol === "http:";
+  const isHttp = forwardedProto
+    ? forwardedProto === "http"
+    : request.nextUrl.protocol === "http:";
 
   if (!isHttp) {
     return NextResponse.next();

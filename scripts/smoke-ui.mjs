@@ -4,10 +4,17 @@ import puppeteer from "puppeteer-core";
 
 const baseUrl = process.env.SMOKE_BASE_URL || "http://127.0.0.1:3000";
 const executablePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const localProxyHeaders = baseUrl.startsWith("http://")
+  ? { "x-forwarded-proto": "https" }
+  : {};
 const artifacts = path.join(process.cwd(), "artifacts");
 await mkdir(artifacts, { recursive: true });
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ["--no-sandbox"] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+});
 const errors = [];
 
 const watchErrors = (page, label) => {
@@ -37,7 +44,7 @@ try {
       void request.continue();
     }
   });
-  await page.setExtraHTTPHeaders({ "Accept-Language": "en-US,en;q=0.9" });
+  await page.setExtraHTTPHeaders({ "Accept-Language": "en-US,en;q=0.9", ...localProxyHeaders });
   await page.setViewport({ width: 1440, height: 960, deviceScaleFactor: 1 });
   await page.goto(baseUrl, { waitUntil: "networkidle0" });
   await expectLanguage(page, "en");
@@ -96,7 +103,7 @@ try {
   if (!initiallyDisabled) throw new Error("The preparation page did not create a short guided pause");
   await page.screenshot({ path: path.join(artifacts, "preparation-en-desktop.png"), fullPage: true });
   await page.waitForFunction(() => !document.querySelector(".preparation-actions .primary")?.hasAttribute("disabled"), { timeout: 5_000 });
-  await page.locator(".preparation-actions .primary").click();
+  await page.$eval(".preparation-actions .primary", (element) => element.click());
   await page.waitForSelector(".tarot-table .table-card");
   const deckCount = await page.$$eval(".tarot-table .table-card", (items) => items.length);
   if (deckCount !== 78) throw new Error(`Expected 78 deck buttons, found ${deckCount}`);
@@ -109,6 +116,8 @@ try {
   for (let index = 0; index < 3; index += 1) {
     await page.locator("::-p-text(Reveal this card)").click();
   }
+  await page.waitForSelector(".save-reading-dialog");
+  await page.locator("::-p-text(Not now)").click();
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const revealedCardOpacity = await page.$eval(".reveal-card.revealed", (element) => getComputedStyle(element).opacity);
   if (revealedCardOpacity !== "1") {
@@ -160,7 +169,7 @@ try {
   const mobileContext = await browser.createBrowserContext();
   const mobile = await mobileContext.newPage();
   watchErrors(mobile, "mobile");
-  await mobile.setExtraHTTPHeaders({ "Accept-Language": "en-GB,en;q=0.9" });
+  await mobile.setExtraHTTPHeaders({ "Accept-Language": "en-GB,en;q=0.9", ...localProxyHeaders });
   await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
   await mobile.goto(baseUrl, { waitUntil: "networkidle0" });
   await expectLanguage(mobile, "en");
@@ -178,7 +187,7 @@ try {
   await englishContext.close();
   await mobileContext.close();
   if (errors.length) throw new Error(`Browser console errors:\n${errors.join("\n")}`);
-  console.log("UI smoke passed: bilingual labels, guided preparation, 78-card flow, in-site preview/download, local and AI reading share actions, and mobile language control.");
+  console.log("UI smoke passed: bilingual labels, guided preparation, 78-card flow, save prompt, in-site preview/download, local and AI reading share actions, and mobile language control.");
 } finally {
   await browser.close();
 }

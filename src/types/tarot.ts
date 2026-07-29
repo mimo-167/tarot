@@ -77,4 +77,5 @@ export type AppView =
   | "table"
   | "reveal"
   | "daily"
-  | "favorites";
+  | "favorites"
+  | "history";

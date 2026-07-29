@@ -11,10 +11,10 @@
     "smoke:ui": "node scripts/smoke-ui.mjs",
     "clean:build": "node scripts/clean-build.mjs",
     "generate:data": "node scripts/generate-tarot-data.mjs",
-    "cf:build": "npm run clean:build && opennextjs-cloudflare build",
-    "preview": "npm run clean:build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "npm run clean:build && opennextjs-cloudflare build && opennextjs-cloudflare deploy -- --keep-vars",
-    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf:build": "npm run clean:build && opennextjs-cloudflare build --noMinify",
+    "preview": "npm run clean:build && opennextjs-cloudflare build --noMinify && opennextjs-cloudflare preview",
+    "deploy": "npm run clean:build && opennextjs-cloudflare build --noMinify && opennextjs-cloudflare deploy -- --keep-vars",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv --include-runtime false cloudflare-env.d.ts"
   },
   "dependencies": {
     "next": "16.2.10",

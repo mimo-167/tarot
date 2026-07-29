@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "xingyue-tarot",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2026-07-18",
+  "compatibility_date": "2026-07-21",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "routes": [
@@ -18,10 +18,37 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "ADMIN_EMAIL": "zhumo0110@gmail.com",
+    "RESEND_FROM_EMAIL": "星月塔罗 <login@mail.tarot.zxkpg.uk>"
+  },
+  "secrets": {
+    "required": [
+      "DEEPSEEK_API_KEY",
+      "RESEND_API_KEY",
+      "AUTH_SECRET"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "xingyue-tarot-db",
+      "database_id": "aac58836-f31b-40b4-b521-426fe47fac31",
+      "migrations_dir": "migrations"
+    }
+  ],
   "ratelimits": [
     {
       "name": "AI_RATE_LIMITER",
       "namespace_id": "2026071801",
+      "simple": {
+        "limit": 5,
+        "period": 60
+      }
+    },
+    {
+      "name": "AUTH_RATE_LIMITER",
+      "namespace_id": "2026072901",
       "simple": {
         "limit": 5,
         "period": 60

@@ -6,8 +6,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { localizeSpread, spreads } from "@/data/spreads";
 import { appMessages } from "@/i18n/messages";
+import { AuthDialog } from "@/components/AuthDialog";
+import { ReadingHistory } from "@/components/ReadingHistory";
+import { SaveReadingDialog } from "@/components/SaveReadingDialog";
 import { SiteFooter } from "@/components/SiteFooter";
 import type { Locale } from "@/i18n/config";
+import type { SessionUser } from "@/types/account";
 import type { AppView, DrawnCard, ReadingRequest, Spread, TarotCard } from "@/types/tarot";
 
 type TarotGame = typeof import("@/lib/game");
@@ -61,6 +65,7 @@ type DailyRecord = { date: string; cardId: string; orientation: "upright" | "rev
 type Notice = { text: string; tone?: "default" | "error" } | null;
 type SpreadFilter = "all" | Spread["category"];
 type SharePreviewState = { url: string; fileName: string; locale: Locale } | null;
+type AuthReason = "login" | "unlock" | "save";
 
 const initialQuestion: QuestionDraft = {
   question: "",
@@ -110,6 +115,8 @@ export function TarotExperience({
   const [readingOpen, setReadingOpen] = useState(false);
   const [readingTab, setReadingTab] = useState<"local" | "ai">("local");
   const [aiReading, setAiReading] = useState("");
+  const [aiPreview, setAiPreview] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [preparationStep, setPreparationStep] = useState(0);
@@ -118,6 +125,14 @@ export function TarotExperience({
   const [shareLoading, setShareLoading] = useState(false);
   const [daily, setDaily] = useState<DailyRecord | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authReason, setAuthReason] = useState<AuthReason>("login");
+  const [savePromptOpen, setSavePromptOpen] = useState(false);
+  const [saveAfterLogin, setSaveAfterLogin] = useState(false);
+  const [savingReading, setSavingReading] = useState(false);
+  const [savedReadingId, setSavedReadingId] = useState<string | null>(null);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const tarotResources = useRef<TarotResources | null>(null);
   const sharePreviewUrl = useRef<string | null>(null);
   const [loadedCards, setLoadedCards] = useState<TarotCard[] | null>(null);
@@ -128,6 +143,19 @@ export function TarotExperience({
     document.documentElement.lang = locale;
     document.title = appMessages[locale].documentTitle;
   }, [locale]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/session")
+      .then((response) => response.json())
+      .then((result: { user?: SessionUser | null }) => {
+        if (active) setUser(result.user || null);
+      })
+      .catch(() => {
+        // Guest mode remains fully usable if session lookup is temporarily unavailable.
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (view !== "preparation") return;
@@ -211,7 +239,12 @@ export function TarotExperience({
     setRevealCursor(0);
     setReadingOpen(false);
     setAiReading("");
+    setAiPreview(false);
+    setPreviewId(null);
     setAiError("");
+    setSavePromptOpen(false);
+    setSaveAfterLogin(false);
+    setSavedReadingId(null);
     const resources = tarotResources.current;
     if (newDeck && resources) setDeck(resources.game.createTableDeck(resources.cards));
   }, []);
@@ -289,9 +322,117 @@ export function TarotExperience({
     pickedRef.current = next;
     setPicked(next);
     setRevealCursor(index + 1);
+    if (index === pickedRef.current.length - 1) {
+      window.setTimeout(() => setSavePromptOpen(true), 450);
+    }
   };
 
   const allRevealed = picked.length > 0 && revealCursor === picked.length;
+
+  const createReadingRequest = useCallback((requestLocale: Locale): ReadingRequest => ({
+    locale: requestLocale,
+    question: question.question,
+    context: question.context,
+    timeframe: question.timeframe,
+    spread: localizeSpread(selectedSpread, requestLocale),
+    options: selectedSpread.needsOptions ? { a: question.optionA, b: question.optionB } : null,
+    cards: pickedRef.current.map((card, index) => ({
+      id: card.id,
+      position: localizeSpread(selectedSpread, requestLocale).positions[index],
+      orientation: card.orientation,
+    })),
+  }), [question, selectedSpread]);
+
+  const persistReading = useCallback(async (reading = "") => {
+    if (savingReading) return savedReadingId;
+    setSavingReading(true);
+    try {
+      if (savedReadingId) {
+        if (reading) {
+          const response = await fetch(`/api/readings/${encodeURIComponent(savedReadingId)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ aiReading: reading }),
+          });
+          if (!response.ok) {
+            const result = await response.json() as { error?: string };
+            throw new Error(result.error || copy.aiUnavailable);
+          }
+        }
+        return savedReadingId;
+      }
+      const response = await fetch("/api/readings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request: createReadingRequest(localeRef.current),
+          aiReading: reading,
+        }),
+      });
+      const result = await response.json() as { id?: string; error?: string };
+      if (!response.ok || !result.id) throw new Error(result.error || copy.aiUnavailable);
+      setSavedReadingId(result.id);
+      setHistoryRefreshKey((current) => current + 1);
+      showNotice(localeRef.current === "zh-CN" ? "这次抽牌已经保存" : "This reading has been saved");
+      return result.id;
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : copy.aiUnavailable, "error");
+      return null;
+    } finally {
+      setSavingReading(false);
+    }
+  }, [copy.aiUnavailable, createReadingRequest, savedReadingId, savingReading, showNotice]);
+
+  const openAuth = (reason: AuthReason) => {
+    setAuthReason(reason);
+    setAuthOpen(true);
+  };
+
+  const unlockPreview = useCallback(async (id: string) => {
+    const response = await fetch(`/api/reading-preview/${encodeURIComponent(id)}`);
+    const result = await response.json() as { reading?: string; error?: string };
+    if (!response.ok || !result.reading) {
+      throw new Error(result.error || appMessages[localeRef.current].aiUnavailable);
+    }
+    setAiReading(result.reading);
+    setAiPreview(false);
+    setPreviewId(null);
+    return result.reading;
+  }, []);
+
+  const handleAuthenticated = useCallback(async (authenticatedUser: SessionUser) => {
+    setUser(authenticatedUser);
+    let completeReading = aiReading;
+    let unlocked = false;
+    if (aiPreview && previewId) {
+      try {
+        completeReading = await unlockPreview(previewId);
+        unlocked = true;
+      } catch (error) {
+        completeReading = "";
+        showNotice(
+          error instanceof Error ? error.message : appMessages[localeRef.current].aiUnavailable,
+          "error",
+        );
+      }
+    }
+    if (saveAfterLogin) {
+      await persistReading(completeReading);
+      setSaveAfterLogin(false);
+    } else if (unlocked) {
+      setSavePromptOpen(true);
+    }
+  }, [aiPreview, aiReading, persistReading, previewId, saveAfterLogin, showNotice, unlockPreview]);
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    setAiReading("");
+    setAiPreview(false);
+    setPreviewId(null);
+    setSavedReadingId(null);
+    if (view === "history") setView("home");
+  };
 
   const requestAiReading = async () => {
     if (!allRevealed || aiLoading) return;
@@ -312,28 +453,28 @@ export function TarotExperience({
       clientId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       localStorage.setItem("xingyue:client-id", clientId);
     }
-    const payload: ReadingRequest = {
-      locale: requestLocale,
-      question: question.question,
-      context: question.context,
-      timeframe: question.timeframe,
-      spread: localizeSpread(selectedSpread, requestLocale),
-      options: selectedSpread.needsOptions ? { a: question.optionA, b: question.optionB } : null,
-      cards: picked.map((card, index) => ({
-        id: card.id,
-        position: localizeSpread(selectedSpread, requestLocale).positions[index],
-        orientation: card.orientation,
-      })),
-    };
+    const payload = createReadingRequest(requestLocale);
     try {
       const response = await fetch("/api/reading", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-tarot-client": clientId, "x-tarot-locale": requestLocale },
         body: JSON.stringify(payload),
       });
-      const result = (await response.json()) as { reading?: string; error?: string };
+      const result = (await response.json()) as {
+        reading?: string;
+        error?: string;
+        isPreview?: boolean;
+        previewId?: string;
+      };
       if (!response.ok || !result.reading) throw new Error(result.error || appMessages[requestLocale].aiUnavailable);
-      if (localeRef.current === requestLocale) setAiReading(result.reading);
+      if (localeRef.current === requestLocale) {
+        setAiReading(result.reading);
+        setAiPreview(Boolean(result.isPreview));
+        setPreviewId(result.previewId || null);
+      }
+      if (!result.isPreview && savedReadingId) {
+        await persistReading(result.reading);
+      }
       localStorage.setItem(counterKey, JSON.stringify({ date: day, count: usage?.date === day ? usage.count + 1 : 1 }));
     } catch (error) {
       if (localeRef.current === requestLocale) {
@@ -412,6 +553,14 @@ export function TarotExperience({
           <Link href="/blog">Blog</Link>
         </nav>
         <div className="header-controls">
+          {user ? <>
+            <button className="account-button" onClick={() => setView("history")} title={user.email}>
+              <span aria-hidden="true">✦</span><b>{user.email}</b>
+            </button>
+            <button className="logout-button" onClick={() => void logout()} title={locale === "zh-CN" ? "退出登录" : "Sign out"} aria-label={locale === "zh-CN" ? "退出登录" : "Sign out"}>↗</button>
+          </> : <button className="account-button guest" onClick={() => openAuth("login")}>
+            <span aria-hidden="true">✦</span><b>{locale === "zh-CN" ? "邮箱登录" : "Sign in"}</b>
+          </button>}
           <button className="language-switch" onClick={toggleLanguage} title={copy.languageLabel} aria-label={copy.languageLabel}><span>{copy.languageButton}</span></button>
         </div>
       </header>
@@ -540,8 +689,30 @@ export function TarotExperience({
         </section>
       )}
 
-      {readingOpen && tarotGame && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onShare={(reading) => void handleShare(picked, selectedSpread, reading)} shareLoading={shareLoading} onClose={() => setReadingOpen(false)} locale={locale} tarotGame={tarotGame} />}
+      {view === "history" && user && <ReadingHistory locale={locale} refreshKey={historyRefreshKey} />}
+
+      {readingOpen && tarotGame && <ReadingDialog cards={picked} spread={selectedSpread} question={question.question} tab={readingTab} setTab={setReadingTab} aiReading={aiReading} aiPreview={aiPreview} aiLoading={aiLoading} aiError={aiError} onAi={requestAiReading} onUnlock={() => openAuth("unlock")} onShare={(reading) => void handleShare(picked, selectedSpread, reading)} shareLoading={shareLoading} onClose={() => setReadingOpen(false)} locale={locale} tarotGame={tarotGame} />}
       {sharePreview && <SharePreviewDialog preview={sharePreview} onClose={closeSharePreview} />}
+      <SaveReadingDialog
+        open={savePromptOpen}
+        locale={locale}
+        authenticated={Boolean(user)}
+        saving={savingReading}
+        onSave={() => { void persistReading(aiPreview ? "" : aiReading).then((id) => { if (id) setSavePromptOpen(false); }); }}
+        onLogin={() => {
+          setSaveAfterLogin(true);
+          setSavePromptOpen(false);
+          openAuth("save");
+        }}
+        onSkip={() => setSavePromptOpen(false)}
+      />
+      <AuthDialog
+        open={authOpen}
+        locale={locale}
+        reason={authReason}
+        onClose={() => setAuthOpen(false)}
+        onAuthenticated={handleAuthenticated}
+      />
       {notice && <div className={`toast ${notice.tone === "error" ? "error" : ""}`} role="status">{notice.text}</div>}
       {view !== "table" && <SiteFooter />}
     </main>
@@ -571,14 +742,14 @@ function SpreadGrid({ spreads: items, favorites, onChoose, onFavorite, locale }:
   })}</div>;
 }
 
-function ReadingDialog({ cards, spread, question, tab, setTab, aiReading, aiLoading, aiError, onAi, onShare, shareLoading, onClose, locale, tarotGame }: { cards: DrawnCard[]; spread: Spread; question: string; tab: "local" | "ai"; setTab: (tab: "local" | "ai") => void; aiReading: string; aiLoading: boolean; aiError: string; onAi: () => void; onShare: (reading: string) => void; shareLoading: boolean; onClose: () => void; locale: Locale; tarotGame: TarotGame }) {
+function ReadingDialog({ cards, spread, question, tab, setTab, aiReading, aiPreview, aiLoading, aiError, onAi, onUnlock, onShare, shareLoading, onClose, locale, tarotGame }: { cards: DrawnCard[]; spread: Spread; question: string; tab: "local" | "ai"; setTab: (tab: "local" | "ai") => void; aiReading: string; aiPreview: boolean; aiLoading: boolean; aiError: string; onAi: () => void; onUnlock: () => void; onShare: (reading: string) => void; shareLoading: boolean; onClose: () => void; locale: Locale; tarotGame: TarotGame }) {
   const copy = appMessages[locale];
   const displaySpread = localizeSpread(spread, locale);
   const synthesis = useMemo(() => tarotGame.buildLocalSynthesis(cards, locale), [cards, locale, tarotGame]);
   return <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="reading-dialog" role="dialog" aria-modal="true" aria-labelledby="reading-title"><header><div><small>{displaySpread.name}</small><h2 id="reading-title">{copy.readingTitle}</h2></div><button onClick={onClose} autoFocus aria-label={copy.closeReading}>×</button></header><div className="reading-tabs" role="tablist"><button role="tab" aria-selected={tab === "local"} className={tab === "local" ? "active" : ""} onClick={() => setTab("local")}>{copy.localMeanings}</button><button role="tab" aria-selected={tab === "ai"} className={tab === "ai" ? "active" : ""} onClick={() => setTab("ai")}>{copy.aiAnalysis}</button></div><div className="reading-body">{tab === "local" ? <><div className="reading-intro"><span>☾</span><p>{question ? copy.questionReadingIntro(question) : copy.openReadingIntro}</p></div>{cards.map((card, index) => {
     const displayCard = tarotGame.getCardCopy(card, locale);
     return <article className="local-card-reading" key={card.id}><Image src={card.image} alt="" width={76} height={114} className={card.orientation === "reversed" ? "image-reversed" : ""} /><div><small>{displaySpread.positions[index]}</small><h3>{displayCard.name} {locale === "zh-CN" && <em>{card.nameEn}</em>}<span>{tarotGame.orientationLabel(card.orientation, locale)}</span></h3><p>{tarotGame.localMeaningFor(card, question, locale)}</p></div></article>;
-  })}<section className="local-synthesis"><h3>{copy.synthesisTitle}</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><div className="reading-actions"><button className="button secondary" onClick={() => onShare(synthesis.join("\n\n"))} disabled={shareLoading}><Icon name="share" /> {shareLoading ? copy.shareGenerating : copy.shareReading}</button><button className="button primary" onClick={onAi}>{copy.continueAi}</button></div></> : <div className="ai-reading">{aiLoading ? <AiLoadingState messages={copy.aiLoadingMessages} /> : aiError ? <div className="ai-error"><span>☁</span><h3>{copy.aiErrorTitle}</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>{copy.tryAgain}</button><button className="button text-button" onClick={() => setTab("local")}>{copy.backToLocal}</button></div> : aiReading ? <><ReactMarkdown>{aiReading}</ReactMarkdown><div className="reading-actions"><button className="button secondary" onClick={() => onShare(aiReading)} disabled={shareLoading}><Icon name="share" /> {shareLoading ? copy.shareGenerating : copy.shareReading}</button></div></> : <div className="ai-ready"><span>✦</span><h3>{copy.aiReadyTitle}</h3><p>{copy.aiReadyLead}</p><button className="button primary" onClick={onAi}>{copy.startAi}</button></div>}</div>}</div></section></div>;
+  })}<section className="local-synthesis"><h3>{copy.synthesisTitle}</h3>{synthesis.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section><div className="reading-actions"><button className="button secondary" onClick={() => onShare(synthesis.join("\n\n"))} disabled={shareLoading}><Icon name="share" /> {shareLoading ? copy.shareGenerating : copy.shareReading}</button><button className="button primary" onClick={onAi}>{copy.continueAi}</button></div></> : <div className="ai-reading">{aiLoading ? <AiLoadingState messages={copy.aiLoadingMessages} /> : aiError ? <div className="ai-error"><span>☁</span><h3>{copy.aiErrorTitle}</h3><p>{aiError}</p><button className="button secondary" onClick={onAi}>{copy.tryAgain}</button><button className="button text-button" onClick={() => setTab("local")}>{copy.backToLocal}</button></div> : aiReading ? <>{aiPreview ? <div className="guest-ai-preview"><div className="guest-ai-visible"><ReactMarkdown>{aiReading}</ReactMarkdown></div><div className="guest-ai-locked" aria-hidden="true"><p /><p /><p /><p /><p /><p /></div><div className="guest-ai-unlock"><span>✦</span><h3>{locale === "zh-CN" ? "还有 70% 的完整解读" : "70% of your reading is still waiting"}</h3><p>{locale === "zh-CN" ? "邮箱验证码免费登录，即刻展开剩余内容，不需要重新抽牌。" : "Sign in free with an email code to reveal the rest—no need to draw again."}</p><button className="button primary large" onClick={onUnlock}>{locale === "zh-CN" ? "邮箱登录，免费解锁" : "Sign in free to unlock"}</button></div></div> : <><ReactMarkdown>{aiReading}</ReactMarkdown><div className="reading-actions"><button className="button secondary" onClick={() => onShare(aiReading)} disabled={shareLoading}><Icon name="share" /> {shareLoading ? copy.shareGenerating : copy.shareReading}</button></div></>}</> : <div className="ai-ready"><span>✦</span><h3>{copy.aiReadyTitle}</h3><p>{copy.aiReadyLead}</p><button className="button primary" onClick={onAi}>{copy.startAi}</button></div>}</div>}</div></section></div>;
 }
 
 function AiLoadingState({ messages }: { messages: string[] }) {

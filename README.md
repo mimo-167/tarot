@@ -19,7 +19,7 @@
 | 部署 CLI | Wrangler |
 | 包管理器 | npm（以 `package-lock.json` 为准） |
 
-本文档中的线上信息最后核对于 **2026-07-25**；当时生产域名响应正常。实际部署版本请使用 `npx wrangler deployments status --name xingyue-tarot` 或 `npx wrangler versions list --name xingyue-tarot` 查询，不要把易变化的版本 ID 写死在业务代码中。
+本文档中的线上信息最后核对于 **2026-07-29**。实际部署版本请使用 `npx wrangler deployments status --name xingyue-tarot` 或 `npx wrangler versions list --name xingyue-tarot` 查询，不要把易变化的版本 ID 写死在业务代码中。
 
 ## 修改前必读
 
@@ -49,6 +49,10 @@
 - 中英文牌阵、牌义、AI 解读、错误提示与分享图片。
 - 本地结构化牌义和 DeepSeek 服务端综合解读。
 - 收藏牌阵和同日固定的每日一牌。
+- 游客可完成抽牌和本地解读；游客调用 AI 时，服务端只向浏览器返回前约 30%，其余正文不会进入游客响应，邮箱登录后可免费解锁本次完整解读。
+- Resend 中英文邮箱验证码登录：验证码短时有效、限制尝试次数，登录态使用 `HttpOnly` Cookie；登录后会接续同一游客会话中的 AI 解读。
+- 翻完牌后询问是否保存；登录用户可保存问题、牌阵、牌面快照和 AI 解读，并在“我的抽牌记录”查看或删除。
+- `/admin` SaaS 管理后台：仅服务端确认的管理员可访问总览、用户状态、抽牌记录和审计日志；敏感记录详情按需读取。
 - Canvas 生成缩略分享图，用户预览后下载到本地；不依赖 Windows 系统共享面板。
 - 前端友好额度与 Cloudflare Rate Limiting binding 双层调用限制。
 - 响应式布局、键盘焦点、状态播报和 `prefers-reduced-motion`。
@@ -62,12 +66,15 @@
 - Vitest
 - OpenNext for Cloudflare
 - Cloudflare Workers + Wrangler
+- Cloudflare D1
+- Cloudflare Rate Limiting
+- Resend Transactional Email
 - DeepSeek 的 OpenAI-compatible Chat Completions 接口
 - 原生 Canvas 与浏览器存储
 
 精确版本始终以 [`package.json`](./package.json) 和 [`package-lock.json`](./package-lock.json) 为准，不要仅依据本文档升级依赖。
 
-为避免 Windows 本地及资源受限的 CI 环境在静态页面生成阶段启动过多子进程，`next.config.ts` 将 Next.js 构建并发限制为 2；该设置不影响生产运行时并发。
+为避免 Windows 本地及资源受限的 CI 环境在静态页面生成阶段启动过多子进程，`next.config.ts` 将 Next.js 构建并发限制为 2；Cloudflare 构建脚本使用 OpenNext 的 `--noMinify` 避免 Windows 压缩阶段异常，部署时仍由 Wrangler 处理 Worker 产物。这些设置不影响生产运行时并发。
 
 ## 关键目录与文件
 
@@ -75,6 +82,10 @@
 src/
 ├─ app/
 │  ├─ api/reading/route.ts       # AI 解读服务端接口
+│  ├─ api/auth/                  # 邮箱验证码、会话和退出接口
+│  ├─ api/readings/              # 用户抽牌记录接口
+│  ├─ api/admin/                 # 管理后台接口
+│  ├─ admin/page.tsx             # 管理后台入口
 │  ├─ blog/                      # SEO 内容页
 │  ├─ ai-tarot/ 等主题目录        # SEO Topic Hub 页面
 │  ├─ layout.tsx                 # 全局页面结构和元数据
@@ -83,6 +94,9 @@ src/
 │  └─ globals.css                # 全局样式与响应式设计
 ├─ components/
 │  ├─ TarotExperience.tsx        # 游戏主流程与主要界面
+│  ├─ AuthDialog.tsx             # 邮箱验证码登录
+│  ├─ ReadingHistory.tsx         # 用户抽牌记录
+│  ├─ AdminDashboard.tsx         # SaaS 管理后台
 │  └─ SiteFooter.tsx             # 全站页脚
 ├─ data/
 │  ├─ spreads.ts                 # 牌阵定义
@@ -92,6 +106,9 @@ src/
 ├─ lib/
 │  ├─ reading-prompt.ts          # AI 系统提示词与本次牌面上下文
 │  ├─ reading-validation.ts      # AI 请求校验
+│  ├─ auth.ts                    # 会话、权限和访客身份
+│  ├─ email.ts                   # Resend 双语登录邮件
+│  ├─ saved-readings.ts          # 持久化记录序列化
 │  ├─ share-poster.ts            # 分享图片生成
 │  └─ game.ts                    # 抽牌核心逻辑
 ├─ content/blog-articles.ts      # SEO 文章、FAQ、分类、标签与相关推荐
@@ -100,6 +117,8 @@ src/
 docs/                             # 产品知识、AI 提示词和内容资料
 public/                           # 卡牌图片与静态资源
 scripts/                          # 数据生成、构建清理和 UI 冒烟测试
+migrations/                       # D1 顺序迁移，不修改已上线迁移
+cloudflare-env.d.ts               # 由 Wrangler 配置生成的环境类型
 wrangler.jsonc                    # Worker、域名、静态资源和限流绑定
 open-next.config.ts               # OpenNext Cloudflare 适配配置
 next.config.ts                    # Next.js 配置
@@ -122,6 +141,7 @@ git clone https://github.com/mimo-167/tarot.git
 cd tarot
 npm install
 Copy-Item .env.example .env.local
+npx wrangler d1 migrations apply DB --local
 npm run dev
 ```
 
@@ -143,11 +163,18 @@ npm run generate:data
 DEEPSEEK_API_KEY=你的密钥
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
+RESEND_API_KEY=你的密钥
+AUTH_SECRET=至少32字节的随机密钥
+ADMIN_EMAIL=zhumo0110@gmail.com
+RESEND_FROM_EMAIL=星月塔罗 <login@mail.tarot.zxkpg.uk>
 ```
 
 规则：
 
-- `DEEPSEEK_API_KEY` 只能由服务端读取。
+- `DEEPSEEK_API_KEY`、`RESEND_API_KEY` 和 `AUTH_SECRET` 只能由服务端读取。
+- `AUTH_SECRET` 用于验证码 HMAC，生产环境必须使用独立高熵值，不得与第三方 API Key 复用。
+- Resend 发件域名需先完成验证；中英文邮件由用户本次界面语言决定。
+- `ADMIN_EMAIL` 只标识超级管理员账号，管理员权限仍在服务端校验，前端参数不能授予角色。
 - 不得使用 `NEXT_PUBLIC_` 前缀，否则密钥可能进入浏览器代码。
 - 不得把真实密钥写进 README、源码、Git 提交、日志或截图。
 - `.env.local`、`.dev.vars` 等本地密钥文件已被 `.gitignore` 忽略。
@@ -158,6 +185,8 @@ DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
 
 ```bash
 npx wrangler secret put DEEPSEEK_API_KEY --name xingyue-tarot
+npx wrangler secret put RESEND_API_KEY --name xingyue-tarot
+npx wrangler secret put AUTH_SECRET --name xingyue-tarot
 ```
 
 不要把密钥直接放在命令参数中。可用以下只读命令确认 Secret 名称是否存在，命令不会显示密钥值：
@@ -180,6 +209,15 @@ npx wrangler secret list --name xingyue-tarot
 | `npm run deploy` | 构建并部署到生产 Worker |
 | `npm run cf:typegen` | 根据 Wrangler 配置生成 Cloudflare 类型 |
 | `npm run generate:data` | 从知识库重新生成结构化牌义 |
+
+D1 迁移命令：
+
+```bash
+npx wrangler d1 migrations apply DB --local
+npx wrangler d1 migrations apply DB --remote
+```
+
+远程迁移会修改生产数据库；先在本地应用和验证，再执行 `--remote`。已应用迁移不可原地改写，后续结构调整应新增编号迁移。
 
 远程运行 UI 冒烟测试时可以指定：
 
@@ -233,6 +271,10 @@ Next.js 源码
 - Node.js 兼容标志：`nodejs_compat`
 - 静态资源绑定：`ASSETS`
 - AI 限流绑定：`AI_RATE_LIMITER`，当前为每个键每分钟 5 次
+- 登录限流绑定：`AUTH_RATE_LIMITER`，当前为每个键每分钟 5 次；D1 同时限制同一邮箱的发送频率和小时额度
+- D1 绑定：`DB` → `xingyue-tarot-db`，迁移目录为 `migrations/`
+- 非密钥变量：`ADMIN_EMAIL`、`RESEND_FROM_EMAIL`
+- 必需 Secrets：`DEEPSEEK_API_KEY`、`RESEND_API_KEY`、`AUTH_SECRET`
 - Workers Observability：已启用
 
 ### 部署前
@@ -242,6 +284,7 @@ npx wrangler whoami
 npm run lint
 npm test
 npm run cf:build
+npx wrangler d1 migrations apply DB --remote
 ```
 
 `npm run deploy` 会直接修改生产环境，只有在确认要发布时执行：
@@ -264,6 +307,9 @@ npx wrangler versions list --name xingyue-tarot
 - <https://tarot.zxkpg.uk/> 能正常打开且使用 HTTPS。
 - 中文和 English 切换正常，刷新后语言偏好仍保留。
 - 抽牌、翻牌、本地解读和 AI 解读正常。
+- 游客 AI 响应只包含约 30% 预览，登录后能够解锁同一次完整解读。
+- 翻完牌后的保存询问、登录用户的记录查看与删除正常。
+- `/admin` 只允许管理员进入，用户状态、记录管理和审计日志正常。
 - 分享图可以预览并下载。
 - 手机端页面没有横向溢出或按钮遮挡。
 
@@ -297,6 +343,9 @@ npx wrangler rollback <VERSION_ID> --name xingyue-tarot
 - AI 不得制造恐惧，不替用户做医疗、法律、财务或其他重大决定。
 - AI 不应声称知道第三方的真实想法。
 - 用户问题属于敏感输入，不应写入持久日志或前端分析事件。
+- 用户问题、牌面与 AI 解读只在用户主动选择保存后进入 `readings`；游客完整 AI 解读暂存 24 小时用于登录解锁，并按游客 Cookie 哈希隔离。
+- 管理员列表不对问题正文做全文搜索；读取详情、删除记录和修改用户状态必须通过服务端角色校验并写入审计日志。
+- 登录验证码仅保存加盐 HMAC，5 分钟过期且限制尝试次数；会话令牌只保存 SHA-256 哈希。
 - 修改提示词时必须同时检查提示注入隔离、输出边界和中英文行为。
 - 修改牌义时要保持 78 张牌、正逆位、牌名和中英文数据的映射稳定。
 

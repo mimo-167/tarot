@@ -1,7 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { spreads } from "@/data/spreads";
 import { validateReadingRequest } from "@/lib/reading-validation";
 import { POST } from "@/app/api/reading/route";
+
+vi.mock("@/lib/auth", () => ({
+  getCurrentUser: vi.fn(async () => null),
+  getGuestTokenHash: vi.fn(async () => "guest-hash"),
+  isSameOrigin: vi.fn(() => true),
+  sha256: vi.fn(async (value: string) => value),
+}));
+vi.mock("@/lib/runtime-env", () => ({
+  getRuntimeEnv: vi.fn(),
+}));
 
 describe("validateReadingRequest", () => {
   it("accepts a canonical three-card reading", () => {
