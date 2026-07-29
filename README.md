@@ -271,7 +271,8 @@ Next.js 源码
 - Node.js 兼容标志：`nodejs_compat`
 - 静态资源绑定：`ASSETS`
 - AI 限流绑定：`AI_RATE_LIMITER`，当前为每个键每分钟 5 次
-- 登录限流绑定：`AUTH_RATE_LIMITER`，当前为每个键每分钟 5 次；D1 同时限制同一邮箱的发送频率和小时额度
+- 验证码校验限流绑定：`AUTH_RATE_LIMITER`，当前为每个键每分钟 5 次，单个验证码仍最多输错 5 次
+- 验证码发送限流绑定：`AUTH_SEND_RATE_LIMITER`，当前为同一来源与邮箱每分钟 10 次；D1 进一步限制同一邮箱至少间隔 30 秒、每小时最多发送 10 次
 - D1 绑定：`DB` → `xingyue-tarot-db`，迁移目录为 `migrations/`
 - 非密钥变量：`ADMIN_EMAIL`、`RESEND_FROM_EMAIL`
 - 必需 Secrets：`DEEPSEEK_API_KEY`、`RESEND_API_KEY`、`AUTH_SECRET`

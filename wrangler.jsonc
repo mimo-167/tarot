@@ -53,6 +53,14 @@
         "limit": 5,
         "period": 60
       }
+    },
+    {
+      "name": "AUTH_SEND_RATE_LIMITER",
+      "namespace_id": "2026072902",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
     }
   ]
 }

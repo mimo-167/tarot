@@ -9,6 +9,7 @@ import {
   sha256,
 } from "@/lib/auth";
 import { apiError } from "@/lib/api-response";
+import { isLoginCodeSendRateLimited } from "@/lib/auth-policy";
 import { sendLoginCode } from "@/lib/email";
 import { getRuntimeEnv } from "@/lib/runtime-env";
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
     const env = getRuntimeEnv();
     const ip = request.headers.get("cf-connecting-ip") || "local";
     const rateKey = await sha256(`${ip}:${email}`);
-    const limited = await env.AUTH_RATE_LIMITER.limit({ key: `send:${rateKey}` });
+    const limited = await env.AUTH_SEND_RATE_LIMITER.limit({ key: `send:${rateKey}` });
     if (!limited.success) {
       throw new HttpError(429, "CODE_RATE_LIMITED", copy.frequent);
     }
@@ -82,7 +83,11 @@ export async function POST(request: Request) {
     ]);
     const recent = recentResult.results[0] as RecentCodeRow | undefined;
     const hourly = hourlyResult.results[0] as CountRow | undefined;
-    if ((recent && now - recent.created_at < 60_000) || (hourly?.total || 0) >= 5) {
+    if (isLoginCodeSendRateLimited({
+      recentCreatedAt: recent?.created_at ?? null,
+      hourlyTotal: hourly?.total || 0,
+      now,
+    })) {
       throw new HttpError(429, "CODE_RATE_LIMITED", copy.frequent);
     }
     await env.DB.prepare("DELETE FROM login_codes WHERE expires_at < ?")
