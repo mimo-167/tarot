@@ -7,7 +7,11 @@ import {
   sha256,
 } from "@/lib/auth";
 import { buildUserPrompt, SYSTEM_PROMPTS } from "@/lib/reading-prompt";
-import { createReadingPreview, GUEST_PREVIEW_FRACTION } from "@/lib/reading-preview";
+import {
+  createReadingPreview,
+  isSafetyReading,
+  stripGuestPreviewBoundary,
+} from "@/lib/reading-preview";
 import {
   validateReadingRequest,
   type ValidationErrorCode,
@@ -152,12 +156,21 @@ export async function POST(request: Request) {
     const completion = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const reading = completion.choices?.[0]?.message?.content?.trim();
-    if (!reading) throw new Error("DeepSeek returned an empty response");
-    if (user) {
+    const generatedReading = completion.choices?.[0]?.message?.content?.trim();
+    if (!generatedReading) throw new Error("DeepSeek returned an empty response");
+    const reading = stripGuestPreviewBoundary(generatedReading);
+    if (user || isSafetyReading(generatedReading, locale)) {
       return jsonResponse({ reading, isPreview: false }, locale);
     }
     if (!guestTokenHash) throw new Error("Could not create a guest session");
+    const preview = createReadingPreview(generatedReading, locale);
+    if (!preview) {
+      console.error(JSON.stringify({
+        message: "DeepSeek response missed required preview sections",
+        locale,
+      }));
+      return errorResponse(locale, "UPSTREAM_ERROR", 502);
+    }
     const previewId = crypto.randomUUID();
     const now = Date.now();
     await env.DB.batch([
@@ -169,10 +182,9 @@ export async function POST(request: Request) {
       ).bind(previewId, guestTokenHash, locale, reading, now, now + 24 * 60 * 60 * 1000),
     ]);
     return jsonResponse({
-      reading: createReadingPreview(reading),
+      reading: preview,
       isPreview: true,
       previewId,
-      previewFraction: GUEST_PREVIEW_FRACTION,
     }, locale);
   } catch (error) {
     console.error("Tarot reading failed", error);
