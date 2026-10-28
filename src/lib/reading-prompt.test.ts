@@ -4,7 +4,6 @@ import cardsJson from "@/data/tarot-cards.json";
 import { localizeSpread, spreads } from "@/data/spreads";
 import type { Locale } from "@/i18n/config";
 import { buildUserPrompt, SYSTEM_PROMPTS } from "@/lib/reading-prompt";
-import { GUEST_PREVIEW_BOUNDARY } from "@/lib/reading-preview";
 import type { ReadingRequest, TarotCard } from "@/types/tarot";
 
 type EnglishCardCopy = {
@@ -73,7 +72,7 @@ describe("localized reading prompts", () => {
     expect(SYSTEM_PROMPTS.en).toContain("## Reading the spread as a whole");
     expect(SYSTEM_PROMPTS.en).toContain("## Back to your question");
     expect(SYSTEM_PROMPTS.en).toContain("## Takeaways");
-    expect(SYSTEM_PROMPTS.en).toContain(GUEST_PREVIEW_BOUNDARY);
+    expect(SYSTEM_PROMPTS.en).not.toContain("guest-preview-boundary");
     expect(SYSTEM_PROMPTS.en).toContain("genuine, useful synthesis");
     expect(SYSTEM_PROMPTS.en).toContain("Never create suspense through fear");
     expect(SYSTEM_PROMPTS.en).toContain("## Safety first");
@@ -94,7 +93,7 @@ describe("localized reading prompts", () => {
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 这组牌连起来看");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 回到你的问题");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 可以带走的提醒");
-    expect(SYSTEM_PROMPTS["zh-CN"]).toContain(GUEST_PREVIEW_BOUNDARY);
+    expect(SYSTEM_PROMPTS["zh-CN"]).not.toContain("guest-preview-boundary");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("真实、有用的组合依据");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("不得用恐惧、虚假紧迫感");
     expect(SYSTEM_PROMPTS["zh-CN"]).toContain("## 安全优先");

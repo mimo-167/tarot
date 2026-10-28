@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { isLocale, localeFromAcceptLanguage, type Locale } from "@/i18n/config";
 import {
   getCurrentUser,
-  getGuestTokenHash,
   isSameOrigin,
   sha256,
 } from "@/lib/auth";
 import { buildUserPrompt, SYSTEM_PROMPTS } from "@/lib/reading-prompt";
-import {
-  createReadingPreview,
-  isSafetyReading,
-  stripGuestPreviewBoundary,
-} from "@/lib/reading-preview";
+import { stripGuestPreviewBoundary } from "@/lib/reading-preview";
 import {
   validateReadingRequest,
   type ValidationErrorCode,
@@ -110,7 +105,6 @@ export async function POST(request: Request) {
 
   const env = getRuntimeEnv();
   const user = await getCurrentUser();
-  const guestTokenHash = user ? null : await getGuestTokenHash(request);
   const clientId = (request.headers.get("x-tarot-client") || "anonymous").slice(0, 100);
   const ip = request.headers.get("cf-connecting-ip") || "local";
   const guestRateKey = await sha256(`${ip}:${clientId}`);
@@ -159,33 +153,7 @@ export async function POST(request: Request) {
     const generatedReading = completion.choices?.[0]?.message?.content?.trim();
     if (!generatedReading) throw new Error("DeepSeek returned an empty response");
     const reading = stripGuestPreviewBoundary(generatedReading);
-    if (user || isSafetyReading(generatedReading, locale)) {
-      return jsonResponse({ reading, isPreview: false }, locale);
-    }
-    if (!guestTokenHash) throw new Error("Could not create a guest session");
-    const preview = createReadingPreview(generatedReading, locale);
-    if (!preview) {
-      console.error(JSON.stringify({
-        message: "DeepSeek response missed required preview sections",
-        locale,
-      }));
-      return errorResponse(locale, "UPSTREAM_ERROR", 502);
-    }
-    const previewId = crypto.randomUUID();
-    const now = Date.now();
-    await env.DB.batch([
-      env.DB.prepare("DELETE FROM ai_previews WHERE expires_at <= ?").bind(now),
-      env.DB.prepare(
-        `INSERT INTO ai_previews
-         (id, guest_token_hash, locale, full_reading, created_at, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      ).bind(previewId, guestTokenHash, locale, reading, now, now + 24 * 60 * 60 * 1000),
-    ]);
-    return jsonResponse({
-      reading: preview,
-      isPreview: true,
-      previewId,
-    }, locale);
+    return jsonResponse({ reading, isPreview: false }, locale);
   } catch (error) {
     console.error("Tarot reading failed", error);
     return errorResponse(locale, "AI_TIMEOUT", 504);

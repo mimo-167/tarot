@@ -1,17 +1,21 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { spreads } from "@/data/spreads";
+import { getRuntimeEnv } from "@/lib/runtime-env";
 import { validateReadingRequest } from "@/lib/reading-validation";
 import { POST } from "@/app/api/reading/route";
 
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(async () => null),
-  getGuestTokenHash: vi.fn(async () => "guest-hash"),
   isSameOrigin: vi.fn(() => true),
   sha256: vi.fn(async (value: string) => value),
 }));
 vi.mock("@/lib/runtime-env", () => ({
   getRuntimeEnv: vi.fn(),
 }));
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("validateReadingRequest", () => {
   it("accepts a canonical three-card reading", () => {
@@ -113,5 +117,62 @@ describe("reading API localization", () => {
       code: "SPREAD_NOT_FOUND",
       error: "That tarot spread does not exist.",
     });
+  });
+});
+
+describe("reading API guest access", () => {
+  it("returns the complete AI reading without requiring login or storing an unlock preview", async () => {
+    const spread = spreads.find((item) => item.id === "free3")!;
+    const generatedReading = `## 逐张看牌
+
+完整逐牌解读
+
+## 这组牌连起来看
+
+完整组合解读
+
+<!-- guest-preview-boundary -->
+
+## 回到你的问题
+
+完整问题答案
+
+## 可以带走的提醒
+
+- 完整行动建议`;
+    vi.mocked(getRuntimeEnv).mockReturnValue({
+      DEEPSEEK_API_KEY: "test-key",
+      AI_RATE_LIMITER: { limit: vi.fn(async () => ({ success: true })) },
+    } as ReturnType<typeof getRuntimeEnv>);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: generatedReading } }],
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })));
+
+    const response = await POST(new Request("http://localhost/api/reading", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-tarot-locale": "zh-CN" },
+      body: JSON.stringify({
+        locale: "zh-CN",
+        spread: { id: spread.id },
+        cards: ["M00", "W01", "C02"].map((id, index) => ({
+          id,
+          position: spread.positions[index],
+          orientation: "upright",
+        })),
+      }),
+    }));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual({
+      reading: expect.stringContaining("完整问题答案"),
+      isPreview: false,
+    });
+    expect(body.reading).toContain("完整行动建议");
+    expect(body.reading).not.toContain("guest-preview-boundary");
+    expect(body).not.toHaveProperty("previewId");
   });
 });
